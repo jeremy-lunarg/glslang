@@ -10,7 +10,7 @@ spv.subgroupExtendedTypesPartitioned.comp
                               Capability Int8
                               Capability GroupNonUniform
                               Capability StorageUniformBufferBlock16
-                              Capability CapabilityStorageBuffer8BitAccess
+                              Capability StorageBuffer8BitAccess
                               Capability GroupNonUniformPartitionedNV
                               Extension  "SPV_KHR_8bit_storage"
                               Extension  "SPV_NV_shader_subgroup_partitioned"
