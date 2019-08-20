@@ -296,6 +296,7 @@ INSTANTIATE_TEST_CASE_P(
         "spv.builtInXFB.vert",
         "spv.conditionalDemote.frag",
         "spv.conditionalDiscard.frag",
+        "spv.constructComposite.comp",
         "spv.constStruct.vert",
         "spv.constConstruct.vert",
         "spv.controlFlowAttributes.frag",
@@ -500,6 +501,7 @@ INSTANTIATE_TEST_CASE_P(
         "spv.1.4.image.frag",
         "spv.1.4.sparseTexture.frag",
         "spv.1.4.texture.frag",
+        "spv.1.4.constructComposite.comp",
     })),
     FileNameAsCustomTestSuffix
 );
@@ -561,6 +563,7 @@ INSTANTIATE_TEST_CASE_P(
         "vulkan.vert",
         "vulkan.comp",
         "samplerlessTextureFunctions.frag",
+        "spv.specConstArrayCheck.vert",
     })),
     FileNameAsCustomTestSuffix
 );
@@ -640,6 +643,7 @@ INSTANTIATE_TEST_CASE_P(
     "spv.meshShaderUserDefined.mesh",
     "spv.meshShaderPerViewBuiltins.mesh",
     "spv.meshShaderPerViewUserDefined.mesh",
+    "spv.meshShaderPerView_Errors.mesh",
     "spv.meshShaderSharedMem.mesh",
     "spv.meshShaderTaskMem.mesh",
     "spv.320.meshShaderUserDefined.mesh",

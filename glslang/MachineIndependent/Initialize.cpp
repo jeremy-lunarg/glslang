@@ -4163,6 +4163,16 @@ void TBuiltIns::initialize(int version, EProfile profile, const SpvVersion& spvV
             "\n");
     }
 
+    // GL_ARB_shader_clock & GL_EXT_shader_realtime_clock
+    if (profile != EEsProfile && version >= 450) {
+        commonBuiltins.append(
+            "uvec2 clock2x32ARB();"
+            "uint64_t clockARB();"
+            "uvec2 clockRealtime2x32EXT();"
+            "uint64_t clockRealtimeEXT();"
+            "\n");
+    }
+
     // GL_AMD_shader_fragment_mask
     if (profile != EEsProfile && version >= 450 && spvVersion.vulkan > 0) {
         stageBuiltins[EShLangFragment].append(
@@ -4207,14 +4217,12 @@ void TBuiltIns::initialize(int version, EProfile profile, const SpvVersion& spvV
     }
 
     //E_SPV_NV_compute_shader_derivatives
-    
-    stageBuiltins[EShLangCompute].append(derivatives);
-    stageBuiltins[EShLangCompute].append(derivativeControls);
-    stageBuiltins[EShLangCompute].append("\n");
-    
-
+    if ((profile == EEsProfile && version >= 320) || (profile != EEsProfile && version >= 450)) {
+        stageBuiltins[EShLangCompute].append(derivatives);
+        stageBuiltins[EShLangCompute].append(derivativeControls);
+        stageBuiltins[EShLangCompute].append("\n");
+    }
     if (profile != EEsProfile && version >= 450) {
-
         stageBuiltins[EShLangCompute].append(derivativesAndControl16bits);
         stageBuiltins[EShLangCompute].append(derivativesAndControl64bits);
         stageBuiltins[EShLangCompute].append("\n");
@@ -7160,7 +7168,7 @@ void TBuiltIns::identifyBuiltIns(int version, EProfile profile, const SpvVersion
         BuiltInVariable("gl_PositionPerViewNV",         EbvPositionPerViewNV,       symbolTable);
         BuiltInVariable("gl_ViewportMaskPerViewNV",     EbvViewportMaskPerViewNV,   symbolTable);
 
-        if (language != EShLangVertex) {
+        if (language == EShLangVertex || language == EShLangGeometry) {
             symbolTable.setVariableExtensions("gl_in", "gl_SecondaryPositionNV", 1, &E_GL_NV_stereo_view_rendering);
             symbolTable.setVariableExtensions("gl_in", "gl_PositionPerViewNV",   1, &E_GL_NVX_multiview_per_view_attributes);
 
@@ -7506,19 +7514,6 @@ void TBuiltIns::identifyBuiltIns(int version, EProfile profile, const SpvVersion
             BuiltInVariable("gl_BaryCoordNV",        EbvBaryCoordNV,        symbolTable);
             BuiltInVariable("gl_BaryCoordNoPerspNV", EbvBaryCoordNoPerspNV, symbolTable);
         }
-        if (((profile != EEsProfile && version >= 450) ||
-            (profile == EEsProfile && version >= 320)) &&
-            language == EShLangCompute) {
-            symbolTable.setFunctionExtensions("dFdx",                   1, &E_GL_NV_compute_shader_derivatives);
-            symbolTable.setFunctionExtensions("dFdy",                   1, &E_GL_NV_compute_shader_derivatives);
-            symbolTable.setFunctionExtensions("fwidth",                 1, &E_GL_NV_compute_shader_derivatives);
-            symbolTable.setFunctionExtensions("dFdxFine",               1, &E_GL_NV_compute_shader_derivatives);
-            symbolTable.setFunctionExtensions("dFdyFine",               1, &E_GL_NV_compute_shader_derivatives);
-            symbolTable.setFunctionExtensions("fwidthFine",             1, &E_GL_NV_compute_shader_derivatives);
-            symbolTable.setFunctionExtensions("dFdxCoarse",             1, &E_GL_NV_compute_shader_derivatives);
-            symbolTable.setFunctionExtensions("dFdyCoarse",             1, &E_GL_NV_compute_shader_derivatives);
-            symbolTable.setFunctionExtensions("fwidthCoarse",           1, &E_GL_NV_compute_shader_derivatives);
-        }
 #endif
 
         if ((profile != EEsProfile && version >= 450) ||
@@ -7530,6 +7525,12 @@ void TBuiltIns::identifyBuiltIns(int version, EProfile profile, const SpvVersion
         }
 
         symbolTable.setVariableExtensions("gl_FragDepthEXT", 1, &E_GL_EXT_frag_depth);
+
+        symbolTable.setFunctionExtensions("clockARB",     1, &E_GL_ARB_shader_clock);
+        symbolTable.setFunctionExtensions("clock2x32ARB", 1, &E_GL_ARB_shader_clock);
+
+        symbolTable.setFunctionExtensions("clockRealtimeEXT",     1, &E_GL_EXT_shader_realtime_clock);
+        symbolTable.setFunctionExtensions("clockRealtime2x32EXT", 1, &E_GL_EXT_shader_realtime_clock);
 
         if (profile == EEsProfile && version < 320) {
             symbolTable.setVariableExtensions("gl_PrimitiveID",  Num_AEP_geometry_shader, AEP_geometry_shader);
@@ -7830,6 +7831,20 @@ void TBuiltIns::identifyBuiltIns(int version, EProfile profile, const SpvVersion
         symbolTable.setFunctionExtensions("coopMatLoadNV",              1, &E_GL_NV_cooperative_matrix);
         symbolTable.setFunctionExtensions("coopMatStoreNV",             1, &E_GL_NV_cooperative_matrix);
         symbolTable.setFunctionExtensions("coopMatMulAddNV",            1, &E_GL_NV_cooperative_matrix);
+
+#ifdef NV_EXTENSIONS
+        if ((profile != EEsProfile && version >= 450) || (profile == EEsProfile && version >= 320)) {
+            symbolTable.setFunctionExtensions("dFdx",                   1, &E_GL_NV_compute_shader_derivatives);
+            symbolTable.setFunctionExtensions("dFdy",                   1, &E_GL_NV_compute_shader_derivatives);
+            symbolTable.setFunctionExtensions("fwidth",                 1, &E_GL_NV_compute_shader_derivatives);
+            symbolTable.setFunctionExtensions("dFdxFine",               1, &E_GL_NV_compute_shader_derivatives);
+            symbolTable.setFunctionExtensions("dFdyFine",               1, &E_GL_NV_compute_shader_derivatives);
+            symbolTable.setFunctionExtensions("fwidthFine",             1, &E_GL_NV_compute_shader_derivatives);
+            symbolTable.setFunctionExtensions("dFdxCoarse",             1, &E_GL_NV_compute_shader_derivatives);
+            symbolTable.setFunctionExtensions("dFdyCoarse",             1, &E_GL_NV_compute_shader_derivatives);
+            symbolTable.setFunctionExtensions("fwidthCoarse",           1, &E_GL_NV_compute_shader_derivatives);
+        }
+#endif
 
         break;
 #ifdef NV_EXTENSIONS
@@ -8345,6 +8360,12 @@ void TBuiltIns::identifyBuiltIns(int version, EProfile profile, const SpvVersion
     symbolTable.relateToOperator("atomicCounterDecrement", EOpAtomicCounterDecrement);
     symbolTable.relateToOperator("atomicCounter",          EOpAtomicCounter);
 
+    symbolTable.relateToOperator("clockARB",     EOpReadClockSubgroupKHR);
+    symbolTable.relateToOperator("clock2x32ARB", EOpReadClockSubgroupKHR);
+
+    symbolTable.relateToOperator("clockRealtimeEXT",     EOpReadClockDeviceKHR);
+    symbolTable.relateToOperator("clockRealtime2x32EXT", EOpReadClockDeviceKHR);
+
     if (profile != EEsProfile && version >= 460) {
         symbolTable.relateToOperator("atomicCounterAdd",      EOpAtomicCounterAdd);
         symbolTable.relateToOperator("atomicCounterSubtract", EOpAtomicCounterSubtract);
@@ -8821,6 +8842,14 @@ void TBuiltIns::identifyBuiltIns(int version, EProfile profile, const SpvVersion
         BuiltInVariable("gl_in", "gl_BackSecondaryColor",  EbvBackSecondaryColor,  symbolTable);
         BuiltInVariable("gl_in", "gl_TexCoord",            EbvTexCoord,            symbolTable);
         BuiltInVariable("gl_in", "gl_FogFragCoord",        EbvFogFragCoord,        symbolTable);
+
+#ifdef NV_EXTENSIONS
+        symbolTable.setVariableExtensions("gl_in", "gl_SecondaryPositionNV", 1, &E_GL_NV_stereo_view_rendering);
+        symbolTable.setVariableExtensions("gl_in", "gl_PositionPerViewNV",   1, &E_GL_NVX_multiview_per_view_attributes);
+
+        BuiltInVariable("gl_in", "gl_SecondaryPositionNV", EbvSecondaryPositionNV, symbolTable);
+        BuiltInVariable("gl_in", "gl_PositionPerViewNV",   EbvPositionPerViewNV,   symbolTable);
+#endif
 
         // extension requirements
         if (profile == EEsProfile) {
