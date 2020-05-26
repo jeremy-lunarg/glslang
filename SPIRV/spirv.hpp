@@ -1369,6 +1369,7 @@ enum Op {
     OpPtrEqual = 401,
     OpPtrNotEqual = 402,
     OpPtrDiff = 403,
+    OpTerminateInvocation = 4416,
     OpSubgroupBallotKHR = 4421,
     OpSubgroupFirstInvocationKHR = 4422,
     OpSubgroupAllKHR = 4428,
@@ -1826,6 +1827,7 @@ inline void HasResultAndType(Op opcode, bool *hasResult, bool *hasResultType) {
     case OpBranchConditional: *hasResult = false; *hasResultType = false; break;
     case OpSwitch: *hasResult = false; *hasResultType = false; break;
     case OpKill: *hasResult = false; *hasResultType = false; break;
+    case OpTerminateInvocation: *hasResult = false; *hasResultType = false; break;
     case OpReturn: *hasResult = false; *hasResultType = false; break;
     case OpReturnValue: *hasResult = false; *hasResultType = false; break;
     case OpUnreachable: *hasResult = false; *hasResultType = false; break;
