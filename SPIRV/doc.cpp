@@ -173,6 +173,8 @@ const char* ExecutionModeString(int mode)
     case 31: return "ContractionOff";
     case 32: return "Bad";
 
+    case ExecutionModeSubgroupsUniformControlFlowKHR: return "SubgroupUniformControlFlow";
+
     case 4446:  return "PostDepthCoverage";
 
     case ExecutionModeOutputLinesNV:            return "OutputLinesNV";

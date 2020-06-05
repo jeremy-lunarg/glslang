@@ -200,6 +200,7 @@ const char* const E_GL_EXT_ray_flags_primitive_culling      = "GL_EXT_ray_flags_
 const char* const E_GL_EXT_blend_func_extended              = "GL_EXT_blend_func_extended";
 const char* const E_GL_EXT_shader_implicit_conversions      = "GL_EXT_shader_implicit_conversions";
 const char* const E_GL_EXT_null_initializer                 = "GL_EXT_null_initializer";
+const char* const E_GL_EXT_subgroup_uniform_control_flow    = "GL_EXT_subgroup_uniform_control_flow";
 
 // Arrays of extensions for the above viewportEXTs duplications
 
