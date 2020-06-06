@@ -150,7 +150,7 @@ enum ExecutionMode {
     ExecutionModeSubgroupsPerWorkgroupId = 37,
     ExecutionModeLocalSizeId = 38,
     ExecutionModeLocalSizeHintId = 39,
-    ExecutionModeSubgroupsUniformControlFlowKHR = 4421,
+    ExecutionModeSubgroupUniformControlFlowKHR = 4421,
     ExecutionModePostDepthCoverage = 4446,
     ExecutionModeDenormPreserve = 4459,
     ExecutionModeDenormFlushToZero = 4460,

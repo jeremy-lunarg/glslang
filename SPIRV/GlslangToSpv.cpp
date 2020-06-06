@@ -1460,7 +1460,7 @@ TGlslangToSpvTraverser::TGlslangToSpvTraverser(unsigned int spvVersion,
 #ifndef GLSLANG_WEB
     if (glslangIntermediate->getSubgroupUniformControlFlow()) {
         builder.addExtension(spv::E_SPV_KHR_subgroup_uniform_control_flow);
-        builder.addExecutionMode(shaderEntry, spv::ExecutionModeSubgroupsUniformControlFlowKHR);
+        builder.addExecutionMode(shaderEntry, spv::ExecutionModeSubgroupUniformControlFlowKHR);
     }
 #endif
 
