@@ -3451,6 +3451,12 @@ GLSLANG_WEB_EXCLUDE_ON
         parseContext.profileRequires($1.loc, ~EEsProfile, 420, E_GL_ARB_shading_language_420pack, initFeature);
         $$ = $2;
     }
+    | LEFT_BRACE RIGHT_BRACE {
+        const char* initFeature = "empty { } initializer";
+        parseContext.profileRequires($1.loc, EEsProfile, 0, E_GL_EXT_null_initialize_shared_memory, initFeature);
+        parseContext.profileRequires($1.loc, ~EEsProfile, 0, E_GL_EXT_null_initialize_shared_memory, initFeature);
+        $$ = parseContext.intermediate.makeAggregate($1.loc);
+    }
 GLSLANG_WEB_EXCLUDE_OFF
     ;
 

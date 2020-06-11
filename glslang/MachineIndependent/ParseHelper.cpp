@@ -6743,9 +6743,29 @@ TIntermNode* TParseContext::executeInitializer(const TSourceLoc& loc, TIntermTyp
     TStorageQualifier qualifier = variable->getType().getQualifier().storage;
     if (! (qualifier == EvqTemporary || qualifier == EvqGlobal || qualifier == EvqConst ||
            (qualifier == EvqUniform && !isEsProfile() && version >= 120))) {
-        error(loc, " cannot initialize this type of qualifier ", variable->getType().getStorageQualifierString(), "");
+        if (qualifier == EvqShared) {
+            // GL_EXT_null_initialize_shared_memory allows this for shared, if it's a null initializer
+            const char* feature = "initialization with shared qualifier";
+            profileRequires(loc, EEsProfile, 0, E_GL_EXT_null_initialize_shared_memory, feature);
+            profileRequires(loc, ~EEsProfile, 0, E_GL_EXT_null_initialize_shared_memory, feature);
+        } else {
+            error(loc, " cannot initialize this type of qualifier ",
+                  variable->getType().getStorageQualifierString(), "");
+            return nullptr;
+        }
+    }
+
+    // An aggregate with no children means a null initialization
+    if (initializer->getAsAggregate() && initializer->getAsAggregate()->getOp() == EOpNull &&
+        initializer->getAsAggregate()->getSequence().size() == 0) {
+        if (variable->getType().containsUnsizedArray()) {
+            error(loc, "null initializers can't size unsized arrays", "", "");
+            return nullptr;
+        }
+        variable->getWritableType().getQualifier().setNullInit();
         return nullptr;
     }
+
     arrayObjectCheck(loc, variable->getType(), "array initializer");
 
     //
@@ -6789,13 +6809,15 @@ TIntermNode* TParseContext::executeInitializer(const TSourceLoc& loc, TIntermTyp
 
     // Uniforms require a compile-time constant initializer
     if (qualifier == EvqUniform && ! initializer->getType().getQualifier().isFrontEndConstant()) {
-        error(loc, "uniform initializers must be constant", "=", "'%s'", variable->getType().getCompleteString().c_str());
+        error(loc, "uniform initializers must be constant", "=", "'%s'",
+              variable->getType().getCompleteString().c_str());
         variable->getWritableType().getQualifier().makeTemporary();
         return nullptr;
     }
     // Global consts require a constant initializer (specialization constant is okay)
     if (qualifier == EvqConst && symbolTable.atGlobalLevel() && ! initializer->getType().getQualifier().isConstant()) {
-        error(loc, "global const initializers must be constant", "=", "'%s'", variable->getType().getCompleteString().c_str());
+        error(loc, "global const initializers must be constant", "=", "'%s'",
+              variable->getType().getCompleteString().c_str());
         variable->getWritableType().getQualifier().makeTemporary();
         return nullptr;
     }
@@ -6815,7 +6837,8 @@ TIntermNode* TParseContext::executeInitializer(const TSourceLoc& loc, TIntermTyp
         // "In declarations of global variables with no storage qualifier or with a const
         // qualifier any initializer must be a constant expression."
         if (symbolTable.atGlobalLevel() && ! initializer->getType().getQualifier().isConstant()) {
-            const char* initFeature = "non-constant global initializer (needs GL_EXT_shader_non_constant_global_initializers)";
+            const char* initFeature =
+                "non-constant global initializer (needs GL_EXT_shader_non_constant_global_initializers)";
             if (isEsProfile()) {
                 if (relaxedErrors() && ! extensionTurnedOn(E_GL_EXT_shader_non_constant_global_initializers))
                     warn(loc, "not allowed in this version", initFeature, "");
@@ -6829,7 +6852,8 @@ TIntermNode* TParseContext::executeInitializer(const TSourceLoc& loc, TIntermTyp
         // Compile-time tagging of the variable with its constant value...
 
         initializer = intermediate.addConversion(EOpAssign, variable->getType(), initializer);
-        if (! initializer || ! initializer->getType().getQualifier().isConstant() || variable->getType() != initializer->getType()) {
+        if (! initializer || ! initializer->getType().getQualifier().isConstant() ||
+            variable->getType() != initializer->getType()) {
             error(loc, "non-matching or non-convertible constant type for const initializer",
                   variable->getType().getStorageQualifierString(), "");
             variable->getWritableType().getQualifier().makeTemporary();
