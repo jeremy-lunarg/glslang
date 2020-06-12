@@ -1330,15 +1330,17 @@ const char* OpcodeString(int op)
     case OpDecorateStringGOOGLE:       return "OpDecorateStringGOOGLE";
     case OpMemberDecorateStringGOOGLE: return "OpMemberDecorateStringGOOGLE";
 
+    case OpReportIntersectionKHR:             return "OpReportIntersectionKHR";
+    case OpIgnoreIntersectionKHR:             return "OpIgnoreIntersectionKHR";
+    case OpTerminateRayKHR:                   return "OpTerminateRayKHR";
+    case OpTraceNV:                           return "OpTraceNV";
+    case OpTraceRayKHR:                       return "OpTraceRayKHR";
+    case OpTypeAccelerationStructureKHR:      return "OpTypeAccelerationStructureKHR";
+    case OpExecuteCallableNV:                 return "OpExecuteCallableNV";
+    case OpExecuteCallableKHR:                return "OpExecuteCallableKHR";
+    case OpConvertUToAcclerationStructureKHR: return "OpConvertUToAccelerationStructureKHR";
+
     case OpGroupNonUniformPartitionNV:       return "OpGroupNonUniformPartitionNV";
-    case OpReportIntersectionKHR:            return "OpReportIntersectionKHR";
-    case OpIgnoreIntersectionKHR:            return "OpIgnoreIntersectionKHR";
-    case OpTerminateRayKHR:                  return "OpTerminateRayKHR";
-    case OpTraceNV:                          return "OpTraceNV";
-    case OpTraceRayKHR:                      return "OpTraceRayKHR";
-    case OpTypeAccelerationStructureKHR:     return "OpTypeAccelerationStructureKHR";
-    case OpExecuteCallableNV:                return "OpExecuteCallableNV";
-    case OpExecuteCallableKHR:               return "OpExecuteCallableKHR";
     case OpImageSampleFootprintNV:           return "OpImageSampleFootprintNV";
     case OpWritePackedPrimitiveIndices4x8NV: return "OpWritePackedPrimitiveIndices4x8NV";
 
@@ -2768,6 +2770,9 @@ void Parameterize()
     InstructionDesc[OpExecuteCallableKHR].operands.push(OperandId, "SBT Record Index");
     InstructionDesc[OpExecuteCallableKHR].operands.push(OperandId, "CallableData");
     InstructionDesc[OpExecuteCallableKHR].setResultAndType(false, false);
+
+    InstructionDesc[OpConvertUToAcclerationStructureKHR].operands.push(OperandId, "Value");
+    InstructionDesc[OpConvertUToAcclerationStructureKHR].setResultAndType(true, true);
 
     // Ray Query
     InstructionDesc[OpTypeAccelerationStructureKHR].setResultAndType(true, false);
