@@ -6736,6 +6736,11 @@ TVariable* TParseContext::declareNonArray(const TSourceLoc& loc, const TString& 
 //
 TIntermNode* TParseContext::executeInitializer(const TSourceLoc& loc, TIntermTyped* initializer, TVariable* variable)
 {
+    // A null initializer is an aggregate that hasn't had an op assigned yet
+    // (still EOpNull, no relation to nullInit), and has no children.
+    bool nullInit = initializer->getAsAggregate() && initializer->getAsAggregate()->getOp() == EOpNull &&
+        initializer->getAsAggregate()->getSequence().size() == 0;
+
     //
     // Identifier must be of type constant, a global, or a temporary, and
     // starting at version 120, desktop allows uniforms to have initializers.
@@ -6745,9 +6750,13 @@ TIntermNode* TParseContext::executeInitializer(const TSourceLoc& loc, TIntermTyp
            (qualifier == EvqUniform && !isEsProfile() && version >= 120))) {
         if (qualifier == EvqShared) {
             // GL_EXT_null_initialize_shared_memory allows this for shared, if it's a null initializer
-            const char* feature = "initialization with shared qualifier";
-            profileRequires(loc, EEsProfile, 0, E_GL_EXT_null_initialize_shared_memory, feature);
-            profileRequires(loc, ~EEsProfile, 0, E_GL_EXT_null_initialize_shared_memory, feature);
+            if (nullInit) {
+                const char* feature = "initialization with shared qualifier";
+                profileRequires(loc, EEsProfile, 0, E_GL_EXT_null_initialize_shared_memory, feature);
+                profileRequires(loc, ~EEsProfile, 0, E_GL_EXT_null_initialize_shared_memory, feature);
+            } else {
+                error(loc, "initializer can only be a null initializer ('{}')", "shared", "");
+            }
         } else {
             error(loc, " cannot initialize this type of qualifier ",
                   variable->getType().getStorageQualifierString(), "");
@@ -6755,11 +6764,14 @@ TIntermNode* TParseContext::executeInitializer(const TSourceLoc& loc, TIntermTyp
         }
     }
 
-    // An aggregate with no children means a null initialization
-    if (initializer->getAsAggregate() && initializer->getAsAggregate()->getOp() == EOpNull &&
-        initializer->getAsAggregate()->getSequence().size() == 0) {
+    if (nullInit) {
+        // only some types can be null initialized
         if (variable->getType().containsUnsizedArray()) {
-            error(loc, "null initializers can't size unsized arrays", "", "");
+            error(loc, "null initializers can't size unsized arrays", "{}", "");
+            return nullptr;
+        }
+        if (variable->getType().containsOpaque()) {
+            error(loc, "null initializers can't be used on opaque values", "{}", "");
             return nullptr;
         }
         variable->getWritableType().getQualifier().setNullInit();

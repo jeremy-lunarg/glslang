@@ -23,6 +23,10 @@ shared int i = { };
 
 void main()
 {
+    S local = { };
+    ++local.a;
 }
+
+S global = { };
 
 #endif
