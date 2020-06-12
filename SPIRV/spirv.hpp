@@ -1380,6 +1380,7 @@ enum Op {
     OpTraceRayKHR = 4445,
     OpExecuteCallableKHR = 4446,
     OpTypeRayQueryKHR = 4472,
+    OpConvertUToAcclerationStructureKHR = 4447,
     OpRayQueryInitializeKHR = 4473,
     OpRayQueryTerminateKHR = 4474,
     OpRayQueryGenerateIntersectionKHR = 4475,
@@ -1708,6 +1709,7 @@ inline void HasResultAndType(Op opcode, bool *hasResult, bool *hasResultType) {
     case OpSatConvertSToU: *hasResult = true; *hasResultType = true; break;
     case OpSatConvertUToS: *hasResult = true; *hasResultType = true; break;
     case OpConvertUToPtr: *hasResult = true; *hasResultType = true; break;
+    case OpConvertUToAccelerationStructureKHR: *hasResult = true; *hasResultType = true; break;
     case OpPtrCastToGeneric: *hasResult = true; *hasResultType = true; break;
     case OpGenericCastToPtr: *hasResult = true; *hasResultType = true; break;
     case OpGenericCastToPtrExplicit: *hasResult = true; *hasResultType = true; break;

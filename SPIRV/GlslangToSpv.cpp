@@ -6224,6 +6224,11 @@ spv::Id TGlslangToSpvTraverser::createUnaryOperation(glslang::TOperator op, OpDe
     case glslang::EOpConstructReference:
         unaryOp = spv::OpBitcast;
         break;
+
+    case glslang::EOpConvUint64ToAccStruct:
+    case glslang::EOpConvUvec2ToAccStruct:
+        unaryOp = spv::OpConvertUToAcclerationStructureKHR;
+        break;
 #endif
 
     case glslang::EOpCopyObject:
