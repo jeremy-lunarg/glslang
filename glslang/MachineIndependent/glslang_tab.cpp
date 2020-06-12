@@ -9745,8 +9745,8 @@ yyreduce:
 #line 3454 "MachineIndependent/glslang.y" /* yacc.c:1646  */
     {
         const char* initFeature = "empty { } initializer";
-        parseContext.profileRequires((yyvsp[-1].lex).loc, EEsProfile, 0, E_GL_EXT_null_initialize_shared_memory, initFeature);
-        parseContext.profileRequires((yyvsp[-1].lex).loc, ~EEsProfile, 0, E_GL_EXT_null_initialize_shared_memory, initFeature);
+        parseContext.profileRequires((yyvsp[-1].lex).loc, EEsProfile, 0, E_GL_EXT_null_initializer, initFeature);
+        parseContext.profileRequires((yyvsp[-1].lex).loc, ~EEsProfile, 0, E_GL_EXT_null_initializer, initFeature);
         (yyval.interm.intermTypedNode) = parseContext.intermediate.makeAggregate((yyvsp[-1].lex).loc);
     }
 #line 9753 "MachineIndependent/glslang_tab.cpp" /* yacc.c:1646  */

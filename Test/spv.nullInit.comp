@@ -1,8 +1,8 @@
 #version 460
 
-#extension GL_EXT_null_initialize_shared_memory : enable
+#extension GL_EXT_null_initializer : enable
 
-#ifdef GL_EXT_null_initialize_shared_memory
+#ifdef GL_EXT_null_initializer
 
 struct S {
     vec3[4] v;

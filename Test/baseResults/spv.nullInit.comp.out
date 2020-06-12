@@ -10,7 +10,7 @@ Validation failed
                               EntryPoint GLCompute 4  "main"
                               ExecutionMode 4 LocalSize 1 1 1
                               Source GLSL 460
-                              SourceExtension  "GL_EXT_null_initialize_shared_memory"
+                              SourceExtension  "GL_EXT_null_initializer"
                               Name 4  "main"
                               Name 12  "S"
                               MemberName 12(S) 0  "v"

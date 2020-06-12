@@ -15,7 +15,7 @@ layout(local_size_y_id = 19) in; // ERROR, already used: TODO not yet reported
 shared float f = { };  // ERROR, need an extension
 float g = { };         // ERROR, need an extension
 
-#extension GL_EXT_null_initialize_shared_memory : enable
+#extension GL_EXT_null_initializer : enable
 
 shared float f2 = { };
 float g2 = { };

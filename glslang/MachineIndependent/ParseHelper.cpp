@@ -6749,11 +6749,11 @@ TIntermNode* TParseContext::executeInitializer(const TSourceLoc& loc, TIntermTyp
     if (! (qualifier == EvqTemporary || qualifier == EvqGlobal || qualifier == EvqConst ||
            (qualifier == EvqUniform && !isEsProfile() && version >= 120))) {
         if (qualifier == EvqShared) {
-            // GL_EXT_null_initialize_shared_memory allows this for shared, if it's a null initializer
+            // GL_EXT_null_initializer allows this for shared, if it's a null initializer
             if (nullInit) {
                 const char* feature = "initialization with shared qualifier";
-                profileRequires(loc, EEsProfile, 0, E_GL_EXT_null_initialize_shared_memory, feature);
-                profileRequires(loc, ~EEsProfile, 0, E_GL_EXT_null_initialize_shared_memory, feature);
+                profileRequires(loc, EEsProfile, 0, E_GL_EXT_null_initializer, feature);
+                profileRequires(loc, ~EEsProfile, 0, E_GL_EXT_null_initializer, feature);
             } else {
                 error(loc, "initializer can only be a null initializer ('{}')", "shared", "");
             }
