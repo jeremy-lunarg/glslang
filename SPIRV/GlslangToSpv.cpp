@@ -4562,37 +4562,37 @@ void TGlslangToSpvTraverser::makeGlobalInitializers(const glslang::TIntermSequen
 // This is done here since it is possible that these linker objects are not be referenced in the AST
 void TGlslangToSpvTraverser::collectRayTracingLinkerObjects(const glslang::TIntermSequence &glslFunctions)
 {
-    for (int f = 0; f < (int)glslFunctions.size(); ++f) {
-        glslang::TIntermAggregate* node = glslFunctions[f]->getAsAggregate();
-        if (node && node->getOp() == glslang::EOpLinkerObjects) {
-            glslang::TIntermAggregate* linkerObjects = node->getAsAggregate();
-            for (auto& objSeq : linkerObjects->getSequence()) {
-                auto objNode = objSeq->getAsSymbolNode();
-                if (objNode != nullptr) {
-                    if (objNode->getQualifier().hasLocation()) {
-                        unsigned int location = objNode->getQualifier().layoutLocation;
-                        auto st = objNode->getQualifier().storage;
-                        int set;
-                        switch (st)
-                        {
-                        case glslang::EvqPayload:
-                        case glslang::EvqPayloadIn:
-                            set = 0;
-                            break;
-                        case glslang::EvqCallableData:
-                        case glslang::EvqCallableDataIn:
-                            set = 1;
-                            break;
+    if (glslFunctions.size() == 0)
+        return;
 
-                        default:
-                            set = -1;
-                        }
-                        if (set != -1)
-                            locationToSymbol[set].insert(std::make_pair(location, objNode));
-                    }
+    // Get the last member of the sequences, expected to be the linker-object lists
+    assert(glslFunctions.back()->getAsAggregate()->getOp() == glslang::EOpLinkerObjects);
+
+    glslang::TIntermAggregate* linkerObjects = glslFunctions.back()->getAsAggregate();
+    for (auto& objSeq : linkerObjects->getSequence()) {
+        auto objNode = objSeq->getAsSymbolNode();
+        if (objNode != nullptr) {
+            if (objNode->getQualifier().hasLocation()) {
+                unsigned int location = objNode->getQualifier().layoutLocation;
+                auto st = objNode->getQualifier().storage;
+                int set;
+                switch (st)
+                {
+                case glslang::EvqPayload:
+                case glslang::EvqPayloadIn:
+                    set = 0;
+                    break;
+                case glslang::EvqCallableData:
+                case glslang::EvqCallableDataIn:
+                    set = 1;
+                    break;
+
+                default:
+                    set = -1;
                 }
+                if (set != -1)
+                    locationToSymbol[set].insert(std::make_pair(location, objNode));
             }
-
         }
     }
 }
