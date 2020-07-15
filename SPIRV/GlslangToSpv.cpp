@@ -1071,6 +1071,10 @@ spv::ImageFormat TGlslangToSpvTraverser::TranslateImageFormat(const glslang::TTy
         builder.addCapability(spv::CapabilityStorageImageExtendedFormats);
         break;
 
+    case glslang::ElfR64ui:
+    case glslang::ElfR64i:
+        builder.addExtension(spv::E_SPV_EXT_shader_image_atomic_int64);
+        builder.addCapability(spv::CapabilityInt64ImageAtomicsEXT);
     default:
         break;
     }
@@ -1117,6 +1121,8 @@ spv::ImageFormat TGlslangToSpvTraverser::TranslateImageFormat(const glslang::TTy
     case glslang::ElfRg8ui:         return spv::ImageFormatRg8ui;
     case glslang::ElfR16ui:         return spv::ImageFormatR16ui;
     case glslang::ElfR8ui:          return spv::ImageFormatR8ui;
+    case glslang::ElfR64ui:         return spv::ImageFormatR64ui;
+    case glslang::ElfR64i:          return spv::ImageFormatR64i;
     default:                        return spv::ImageFormatMax;
     }
 }
@@ -3576,6 +3582,12 @@ spv::Id TGlslangToSpvTraverser::getSampledType(const glslang::TSampler& sampler)
             builder.addExtension(spv::E_SPV_AMD_gpu_shader_half_float_fetch);
             builder.addCapability(spv::CapabilityFloat16ImageAMD);
             return builder.makeFloatType(16);
+        case glslang::EbtInt64:      return builder.makeIntType(64);
+            builder.addExtension(spv::E_SPV_EXT_shader_image_atomic_int64);
+            builder.addCapability(spv::CapabilityFloat16ImageAMD);
+        case glslang::EbtUint64:     return builder.makeUintType(64);
+            builder.addExtension(spv::E_SPV_EXT_shader_image_atomic_int64);
+            builder.addCapability(spv::CapabilityFloat16ImageAMD);
 #endif
         default:
             assert(0);

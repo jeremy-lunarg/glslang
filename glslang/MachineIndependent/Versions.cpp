@@ -330,6 +330,7 @@ void TParseVersions::initializeExtensionBehavior()
     extensionBehavior[E_GL_EXT_blend_func_extended]         = EBhDisable;
     extensionBehavior[E_GL_EXT_shader_implicit_conversions] = EBhDisable;
     extensionBehavior[E_GL_EXT_terminate_invocation]        = EBhDisable;
+    extensionBehavior[E_GL_EXT_shader_image_atomic_int64]   = EBhDisable;
 
     // OVR extensions
     extensionBehavior[E_GL_OVR_multiview]                = EBhDisable;
@@ -481,6 +482,7 @@ void TParseVersions::getPreamble(std::string& preamble)
             "#define GL_KHR_shader_subgroup_clustered 1\n"
             "#define GL_KHR_shader_subgroup_quad 1\n"
 
+            "#define GL_EXT_shader_image_atomic_int64 1\n"
             "#define E_GL_EXT_shader_atomic_int64 1\n"
             "#define E_GL_EXT_shader_realtime_clock 1\n"
             "#define E_GL_EXT_ray_tracing 1\n"

@@ -201,6 +201,7 @@ const char* const E_GL_EXT_blend_func_extended              = "GL_EXT_blend_func
 const char* const E_GL_EXT_shader_implicit_conversions      = "GL_EXT_shader_implicit_conversions";
 const char* const E_GL_EXT_null_initializer                 = "GL_EXT_null_initializer";
 const char* const E_GL_EXT_subgroup_uniform_control_flow    = "GL_EXT_subgroup_uniform_control_flow";
+const char* const E_GL_EXT_shader_image_atomic_int64        = "GL_EXT_shader_image_atomic_int64";
 
 // Arrays of extensions for the above viewportEXTs duplications
 

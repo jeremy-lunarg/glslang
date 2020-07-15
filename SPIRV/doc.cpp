@@ -504,6 +504,8 @@ const char* ImageFormatString(int format)
     case 37: return "Rg8ui";
     case 38: return "R16ui";
     case 39: return "R8ui";
+    case 40: return "R64ui";
+    case 41: return "R64i";
 
     default:
         return "Bad";
@@ -937,6 +939,7 @@ const char* CapabilityString(int info)
 
     case CapabilityDemoteToHelperInvocationEXT:             return "DemoteToHelperInvocationEXT";
     case CapabilityShaderClockKHR:                          return "ShaderClockKHR";
+    case CapabilityInt64ImageAtomicsEXT:                    return "Int64ImageAtomicsEXT";
 
     case CapabilityIntegerFunctions2INTEL:              return "CapabilityIntegerFunctions2INTEL";
 
