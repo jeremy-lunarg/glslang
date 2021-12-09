@@ -203,6 +203,8 @@ typedef struct glsl_include_callbacks_s {
 typedef struct glslang_spv_options_s {
     bool generate_debug_info;
     bool strip_debug_info;
+    bool emit_nonsemantic_shader_debug_info;
+    bool emit_nonsemantic_shader_debug_source;
     bool disable_optimizer;
     bool optimize_size;
     bool disassemble;
