@@ -113,6 +113,7 @@ bool SpvToolsDisassembler = false;
 bool SpvToolsValidate = false;
 bool NaNClamp = false;
 bool stripDebugInfo = false;
+bool emitNonSemanticShaderDebugInfo = false;
 bool beQuiet = false;
 bool VulkanRulesRelaxed = false;
 bool autoSampledTextures = false;
@@ -918,9 +919,12 @@ void ProcessArguments(std::vector<std::unique_ptr<glslang::TWorkItem>>& workItem
             case 'g':
                 // Override previous -g or -g0 argument
                 stripDebugInfo = false;
+                emitNonSemanticShaderDebugInfo = false;
                 Options &= ~EOptionDebug;
                 if (argv[0][2] == '0')
                     stripDebugInfo = true;
+                else if (argv[0][2] == 'V')
+                    emitNonSemanticShaderDebugInfo = true;
                 else
                     Options |= EOptionDebug;
                 break;
@@ -1389,6 +1393,8 @@ void CompileAndLinkShaderUnits(std::vector<ShaderCompUnit> compUnits)
                         spvOptions.generateDebugInfo = true;
                     else if (stripDebugInfo)
                         spvOptions.stripDebugInfo = true;
+                    else if (emitNonSemanticShaderDebugInfo)
+                        spvOptions.emitNonSemanticShaderDebugInfo = true;
                     spvOptions.disableOptimizer = (Options & EOptionOptimizeDisable) != 0;
                     spvOptions.optimizeSize = (Options & EOptionOptimizeSize) != 0;
                     spvOptions.disassemble = SpvToolsDisassembler;
