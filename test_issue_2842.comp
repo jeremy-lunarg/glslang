@@ -1,0 +1,24 @@
+#version 450
+#extension GL_ARB_separate_shader_objects : enable
+
+layout(set = 0, binding = 1, rgba8) uniform image2D srcImage[1];
+
+struct NestedStructure{
+	float array2d[512]; // Works when one dimensional [2] or small [2][3]
+};
+
+struct Structure{
+	NestedStructure array[256];
+};
+
+layout(std140, set = 0, binding = 3) buffer Buffer{
+	Structure structure[];
+} buf;
+
+void main() {
+	ivec2 pathPos = ivec2(0,0);
+	pathPos.x = int(gl_GlobalInvocationID.x);
+	pathPos.y = int(gl_GlobalInvocationID.y);
+
+	NestedStructure array[256] = buf.structure[0].array;
+}
