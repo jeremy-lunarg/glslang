@@ -50,6 +50,9 @@
 #include "Logger.h"
 #include "spirv.hpp"
 #include "spvIR.h"
+namespace spv {
+    #include "GLSL.ext.KHR.h"
+}
 
 #include <algorithm>
 #include <map>
@@ -107,7 +110,15 @@ public:
     void addSourceExtension(const char* ext) { sourceExtensions.push_back(ext); }
     void addModuleProcessed(const std::string& p) { moduleProcesses.push_back(p.c_str()); }
     void setEmitOpLines() { emitOpLines = true; }
-    void setEmitNonSemanticShaderDebugInfo(bool const emit) { emitNonSemanticShaderDebugInfo = emit; }
+    void setEmitNonSemanticShaderDebugInfo(bool const emit)
+    {
+        if(emit)
+        {
+            emitNonSemanticShaderDebugInfo = emit;
+            this->addExtension(spv::E_SPV_KHR_non_semantic_info);
+            this->import("NonSemantic.Shader.DebugInfo.100");
+        }
+    }
     void addExtension(const char* ext) { extensions.insert(ext); }
     void removeExtension(const char* ext)
     {
