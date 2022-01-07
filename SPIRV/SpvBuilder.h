@@ -116,7 +116,7 @@ public:
         {
             emitNonSemanticShaderDebugInfo = emit;
             this->addExtension(spv::E_SPV_KHR_non_semantic_info);
-            this->import("NonSemantic.Shader.DebugInfo.100");
+            nonSemanticShaderDebugInfo = this->import("NonSemantic.Shader.DebugInfo.100");
         }
     }
     void addExtension(const char* ext) { extensions.insert(ext); }
@@ -816,6 +816,7 @@ public:
     SourceLanguage source;
     int sourceVersion;
     spv::Id sourceFileStringId;
+    spv::Id nonSemanticShaderDebugInfo {0};
     std::string sourceText;
     int currentLine;
     const char* currentFile;
