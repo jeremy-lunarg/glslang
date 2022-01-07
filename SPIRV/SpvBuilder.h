@@ -112,11 +112,14 @@ public:
     void setEmitOpLines() { emitOpLines = true; }
     void setEmitNonSemanticShaderDebugInfo(bool const emit)
     {
+        emitNonSemanticShaderDebugInfo = emit;
+
+        // TODO: This branch is just for initial testing so we can see that OpExtension and OpExtInstImport instructions
+        // are being generated. We can remove once we have implemented some extended instructions which must call into
+        // importNonSemanticShaderDebugInfoInstructions.
         if(emit)
         {
-            emitNonSemanticShaderDebugInfo = emit;
-            this->addExtension(spv::E_SPV_KHR_non_semantic_info);
-            nonSemanticShaderDebugInfo = this->import("NonSemantic.Shader.DebugInfo.100");
+            importNonSemanticShaderDebugInfoInstructions();
         }
     }
     void addExtension(const char* ext) { extensions.insert(ext); }
@@ -329,6 +332,8 @@ public:
     Id makeDoubleConstant(double d, bool specConstant = false);
     Id makeFloat16Constant(float f16, bool specConstant = false);
     Id makeFpConstant(Id type, double d, bool specConstant = false);
+
+    Id importNonSemanticShaderDebugInfoInstructions();
 
     // Turn the array of constants into a proper spv constant of the requested type.
     Id makeCompositeConstant(Id type, const std::vector<Id>& comps, bool specConst = false);

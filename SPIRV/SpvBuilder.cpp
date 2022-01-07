@@ -1137,6 +1137,19 @@ Id Builder::makeFpConstant(Id type, double d, bool specConstant)
     return NoResult;
 }
 
+Id Builder::importNonSemanticShaderDebugInfoInstructions()
+{
+    assert(emitNonSemanticShaderDebugInfo == true);
+
+    if(nonSemanticShaderDebugInfo == 0)
+    {
+        this->addExtension(spv::E_SPV_KHR_non_semantic_info);
+        nonSemanticShaderDebugInfo = this->import("NonSemantic.Shader.DebugInfo.100");
+    }
+
+    return nonSemanticShaderDebugInfo;
+}
+
 Id Builder::findCompositeConstant(Op typeClass, Id typeId, const std::vector<Id>& comps)
 {
     Instruction* constant = 0;
