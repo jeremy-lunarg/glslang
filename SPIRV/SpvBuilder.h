@@ -52,6 +52,7 @@
 #include "spvIR.h"
 namespace spv {
     #include "GLSL.ext.KHR.h"
+    #include "NonSemanticShaderDebugInfo100.h"
 }
 
 #include <algorithm>
@@ -197,6 +198,8 @@ public:
     Id makeSampledImageType(Id imageType);
     Id makeCooperativeMatrixType(Id component, Id scope, Id rows, Id cols);
     Id makeGenericType(spv::Op opcode, std::vector<spv::IdImmediate>& operands);
+
+    Id makeFloatDebugType();
 
     // accelerationStructureNV type
     Id makeAccelerationStructureType();

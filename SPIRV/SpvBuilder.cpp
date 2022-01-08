@@ -306,6 +306,13 @@ Id Builder::makeFloatType(int width)
         break;
     }
 
+    if (emitNonSemanticShaderDebugInfo)
+    {
+        auto const id = makeFloatDebugType();
+
+        // TODO: Add id to map of basic type-id to debug type-id.
+    }
+
     return type->getResultId();
 }
 
@@ -630,6 +637,23 @@ Id Builder::makeSampledImageType(Id imageType)
     groupedTypes[OpTypeSampledImage].push_back(type);
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
     module.mapInstruction(type);
+
+    return type->getResultId();
+}
+
+Id Builder::makeFloatDebugType()
+{
+    // TODO: Try to find existing debug type? Is this necessary or will the check in caller suffice?
+
+    Instruction* type = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
+    type->addIdOperand(nonSemanticShaderDebugInfo);
+    type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeBasic);
+    type->addIdOperand(getStringId("float")); // name id
+    type->addIdOperand(makeUintConstant(32)); // size id
+    type->addIdOperand(makeUintConstant(3)); // encoding id
+    type->addIdOperand(makeUintConstant(0)); // flags id
+
+    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
 
     return type->getResultId();
 }
