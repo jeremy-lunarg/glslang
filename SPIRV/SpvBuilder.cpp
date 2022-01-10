@@ -308,9 +308,8 @@ Id Builder::makeFloatType(int width)
 
     if (emitNonSemanticShaderDebugInfo)
     {
-        auto const id = makeFloatDebugType();
-
-        // TODO: Add id to map of basic type-id to debug type-id.
+        auto const debug_result_id = makeFloatDebugType();
+        debugTypeId.emplace(type->getResultId(), debug_result_id);
     }
 
     return type->getResultId();
@@ -643,9 +642,16 @@ Id Builder::makeSampledImageType(Id imageType)
 
 Id Builder::makeFloatDebugType()
 {
-    // TODO: Try to find existing debug type? Is this necessary or will the check in caller suffice?
+    // try to find it
+    Instruction* type;
+    for (int t = 0; t < (int)groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeBasic].size(); ++t) {
+        type = groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeBasic][t];
+        if (type->getIdOperand(0) == getStringId("float"))
+            return type->getResultId();
+    }
 
-    Instruction* type = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
+    // not found, make it
+    type = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
     type->addIdOperand(nonSemanticShaderDebugInfo);
     type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeBasic);
     type->addIdOperand(getStringId("float")); // name id

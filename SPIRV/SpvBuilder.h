@@ -863,6 +863,8 @@ public:
     std::unordered_map<unsigned int, std::vector<Instruction*>> groupedStructConstants;
     // map type opcodes to type instructions
     std::unordered_map<unsigned int, std::vector<Instruction*>> groupedTypes;
+    // map type opcodes to debug type instructions
+    std::unordered_map<unsigned int, std::vector<Instruction*>> groupedDebugTypes;
     // list of OpConstantNull instructions
     std::vector<Instruction*> nullConstants;
 
@@ -877,6 +879,9 @@ public:
 
     // map from include file name ids to their contents
     std::map<spv::Id, const std::string*> includeFiles;
+
+    // map from basic type-id to debug type-id
+    std::map <spv::Id, spv::Id> debugTypeId;
 
     // The stream for outputting warnings and errors.
     SpvBuildLogger* logger;
