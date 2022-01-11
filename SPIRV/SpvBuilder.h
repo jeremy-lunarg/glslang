@@ -201,6 +201,7 @@ public:
 
     Id makeFloatDebugType();
     Id makeVectorDebugType(Id const baseType, int const componentCount);
+    Id makeDebugSource(const Id fileName);
 
     // accelerationStructureNV type
     Id makeAccelerationStructureType();
@@ -883,6 +884,9 @@ public:
 
     // map from basic type-id to debug type-id
     std::map <spv::Id, spv::Id> debugTypeId;
+
+    // map from file name string id to DebugSource id
+    std::unordered_map<spv::Id, spv::Id> debugSourceId;
 
     // The stream for outputting warnings and errors.
     SpvBuildLogger* logger;

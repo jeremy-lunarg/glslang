@@ -697,6 +697,15 @@ Id Builder::makeVectorDebugType(Id const baseType, int const componentCount)
     return type->getResultId();
 }
 
+Id Builder::makeDebugSource(const Id fileName) {
+    // If not already created, allocate an id for the DebugSource and add it to map.
+    // The DebugSource instructions will be created later during the binary dump.
+    if (debugSourceId.find(fileName) == debugSourceId.end()) {
+        debugSourceId[fileName] = getUniqueId();
+    }
+    return debugSourceId[fileName];
+}
+
 #ifndef GLSLANG_WEB
 Id Builder::makeAccelerationStructureType()
 {
