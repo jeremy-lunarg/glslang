@@ -309,7 +309,7 @@ Id Builder::makeFloatType(int width)
     if (emitNonSemanticShaderDebugInfo)
     {
         auto const debug_result_id = makeFloatDebugType();
-        debugTypeId.emplace(type->getResultId(), debug_result_id);
+        debugTypeId[type->getResultId()] = debug_result_id;
     }
 
     return type->getResultId();
@@ -378,6 +378,12 @@ Id Builder::makeVectorType(Id component, int size)
     groupedTypes[OpTypeVector].push_back(type);
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
     module.mapInstruction(type);
+
+    if (emitNonSemanticShaderDebugInfo)
+    {
+        auto const debug_result_id = makeVectorDebugType(component, size);
+        debugTypeId[type->getResultId()] = debug_result_id;
+    }
 
     return type->getResultId();
 }
@@ -659,7 +665,34 @@ Id Builder::makeFloatDebugType()
     type->addIdOperand(makeUintConstant(3)); // encoding id
     type->addIdOperand(makeUintConstant(0)); // flags id
 
+    groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeBasic].push_back(type);
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
+    module.mapInstruction(type);
+
+    return type->getResultId();
+}
+
+Id Builder::makeVectorDebugType(Id const baseType, int const componentCount)
+{
+    // try to find it
+    Instruction* type;
+    for (int t = 0; t < (int)groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeVector].size(); ++t) {
+        type = groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeVector][t];
+        if (type->getIdOperand(0) == baseType &&
+            type->getIdOperand(1) == makeUintConstant(componentCount))
+            return type->getResultId();
+    }
+
+    // not found, make it
+    type = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
+    type->addIdOperand(nonSemanticShaderDebugInfo);
+    type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeVector);
+    type->addIdOperand(debugTypeId[baseType]); // base type
+    type->addIdOperand(makeUintConstant(componentCount)); // component count
+
+    groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeVector].push_back(type);
+    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
+    module.mapInstruction(type);
 
     return type->getResultId();
 }

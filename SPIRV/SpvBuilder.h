@@ -200,6 +200,7 @@ public:
     Id makeGenericType(spv::Op opcode, std::vector<spv::IdImmediate>& operands);
 
     Id makeFloatDebugType();
+    Id makeVectorDebugType(Id const baseType, int const componentCount);
 
     // accelerationStructureNV type
     Id makeAccelerationStructureType();
