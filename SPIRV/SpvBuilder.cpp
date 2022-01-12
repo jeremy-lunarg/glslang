@@ -333,6 +333,12 @@ Id Builder::makeStructType(const std::vector<Id>& members, const char* name)
     module.mapInstruction(type);
     addName(type->getResultId(), name);
 
+    if (emitNonSemanticShaderDebugInfo)
+    {
+        auto const debug_result_id = makeCompositeDebugType(members, name);
+        debugTypeId[type->getResultId()] = debug_result_id;
+    }
+
     return type->getResultId();
 }
 
@@ -662,8 +668,8 @@ Id Builder::makeFloatDebugType()
     type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeBasic);
     type->addIdOperand(getStringId("float")); // name id
     type->addIdOperand(makeUintConstant(32)); // size id
-    type->addIdOperand(makeUintConstant(3)); // encoding id
-    type->addIdOperand(makeUintConstant(0)); // flags id
+    type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100Float)); // encoding id
+    type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100None)); // flags id
 
     groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeBasic].push_back(type);
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
@@ -691,6 +697,59 @@ Id Builder::makeVectorDebugType(Id const baseType, int const componentCount)
     type->addIdOperand(makeUintConstant(componentCount)); // component count
 
     groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeVector].push_back(type);
+    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
+    module.mapInstruction(type);
+
+    return type->getResultId();
+}
+
+Id Builder::makeMemberDebugType(Id const memberType)
+{
+    Instruction* type = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
+    type->addIdOperand(nonSemanticShaderDebugInfo);
+    type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeMember);
+    type->addIdOperand(getStringId("TODO")); // TODO: name id
+    type->addIdOperand(debugTypeId[memberType]); // type id
+    type->addIdOperand(getStringId("TODO")); // TODO: source id
+    type->addIdOperand(makeUintConstant(0)); // TODO: line id
+    type->addIdOperand(makeUintConstant(0)); // TODO: column id
+    type->addIdOperand(makeUintConstant(0)); // TODO: offset id
+    type->addIdOperand(makeUintConstant(0)); // TODO: size id
+    type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100FlagIsPublic)); // flags id
+
+    groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeMember].push_back(type);
+    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
+    module.mapInstruction(type);
+
+    return type->getResultId();
+}
+
+Id Builder::makeCompositeDebugType(std::vector<Id> const& memberTypes, char const*const name)
+{
+    // Generate DebutTypeMember instructions.
+    std::vector<Id> memberDebugTypes;
+    memberDebugTypes.reserve(memberTypes.size());
+    for(auto const memberType : memberTypes) {
+        memberDebugTypes.emplace_back(makeMemberDebugType(memberType));
+    }
+
+    Instruction* type = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
+    type->addIdOperand(nonSemanticShaderDebugInfo);
+    type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeComposite);
+    type->addIdOperand(getStringId(name)); // TODO: name id
+    type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100Structure)); // tag id
+    type->addIdOperand(getStringId("TODO")); // TODO: source id
+    type->addIdOperand(makeUintConstant(0)); // TODO: line id
+    type->addIdOperand(makeUintConstant(0)); // TODO: column id
+    type->addIdOperand(getStringId("TODO")); // TODO: scope id
+    type->addIdOperand(getStringId("TODO")); // TODO: linkage name id
+    type->addIdOperand(makeUintConstant(0)); // TODO: size id
+    type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100FlagIsPublic)); // flags id
+    for(auto const memberDebugType : memberDebugTypes) {
+        type->addIdOperand(memberDebugType);
+    }
+
+    groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeComposite].push_back(type);
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
     module.mapInstruction(type);
 

@@ -199,8 +199,11 @@ public:
     Id makeCooperativeMatrixType(Id component, Id scope, Id rows, Id cols);
     Id makeGenericType(spv::Op opcode, std::vector<spv::IdImmediate>& operands);
 
+    // SPIR-V NonSemantic Shader DebugInfo Instructions
     Id makeFloatDebugType();
     Id makeVectorDebugType(Id const baseType, int const componentCount);
+    Id makeMemberDebugType(Id const memberType);
+    Id makeCompositeDebugType(std::vector<Id> const& memberTypes, char const*const name);
     Id makeDebugSource(const Id fileName);
 
     // accelerationStructureNV type
