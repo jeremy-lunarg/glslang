@@ -710,7 +710,7 @@ Id Builder::makeMemberDebugType(Id const memberType)
     type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeMember);
     type->addIdOperand(getStringId("TODO")); // TODO: name id
     type->addIdOperand(debugTypeId[memberType]); // type id
-    type->addIdOperand(getStringId("TODO")); // TODO: source id
+    type->addIdOperand(makeDebugSource(sourceFileStringId)); // TODO: source id must handle include directives
     type->addIdOperand(makeUintConstant(0)); // TODO: line id
     type->addIdOperand(makeUintConstant(0)); // TODO: column id
     type->addIdOperand(makeUintConstant(0)); // TODO: offset id
@@ -738,7 +738,7 @@ Id Builder::makeCompositeDebugType(std::vector<Id> const& memberTypes, char cons
     type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeComposite);
     type->addIdOperand(getStringId(name)); // TODO: name id
     type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100Structure)); // tag id
-    type->addIdOperand(getStringId("TODO")); // TODO: source id
+    type->addIdOperand(makeDebugSource(sourceFileStringId)); // TODO: source id must handle include directives
     type->addIdOperand(makeUintConstant(0)); // TODO: line id
     type->addIdOperand(makeUintConstant(0)); // TODO: column id
     type->addIdOperand(getStringId("TODO")); // TODO: scope id
