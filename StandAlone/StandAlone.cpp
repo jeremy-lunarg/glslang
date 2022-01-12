@@ -114,6 +114,7 @@ bool SpvToolsValidate = false;
 bool NaNClamp = false;
 bool stripDebugInfo = false;
 bool emitNonSemanticShaderDebugInfo = false;
+bool emitNonSemanticShaderDebugSource = false;
 bool beQuiet = false;
 bool VulkanRulesRelaxed = false;
 bool autoSampledTextures = false;
@@ -923,10 +924,17 @@ void ProcessArguments(std::vector<std::unique_ptr<glslang::TWorkItem>>& workItem
                 Options &= ~EOptionDebug;
                 if (argv[0][2] == '0')
                     stripDebugInfo = true;
-                else if (argv[0][2] == 'V')
-                    emitNonSemanticShaderDebugInfo = true;
-                else
+                else {
                     Options |= EOptionDebug;
+                    if (argv[0][2] == 'V') {
+                        emitNonSemanticShaderDebugInfo = true;
+                        if (argv[0][3] == 'S') {
+                            emitNonSemanticShaderDebugSource = true;
+                        } else {
+                            emitNonSemanticShaderDebugSource = false;
+                        }
+                    }
+                }
                 break;
             case 'h':
                 usage();
@@ -1389,12 +1397,16 @@ void CompileAndLinkShaderUnits(std::vector<ShaderCompUnit> compUnits)
                     std::vector<unsigned int> spirv;
                     spv::SpvBuildLogger logger;
                     glslang::SpvOptions spvOptions;
-                    if (Options & EOptionDebug)
+                    if (Options & EOptionDebug) {
                         spvOptions.generateDebugInfo = true;
-                    else if (stripDebugInfo)
+                        if (emitNonSemanticShaderDebugInfo) {
+                            spvOptions.emitNonSemanticShaderDebugInfo = true;
+                            if (emitNonSemanticShaderDebugSource) {
+                                spvOptions.emitNonSemanticShaderDebugSource = true;
+                            }
+                        }
+                    } else if (stripDebugInfo)
                         spvOptions.stripDebugInfo = true;
-                    else if (emitNonSemanticShaderDebugInfo)
-                        spvOptions.emitNonSemanticShaderDebugInfo = true;
                     spvOptions.disableOptimizer = (Options & EOptionOptimizeDisable) != 0;
                     spvOptions.optimizeSize = (Options & EOptionOptimizeSize) != 0;
                     spvOptions.disassemble = SpvToolsDisassembler;

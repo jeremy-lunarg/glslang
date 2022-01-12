@@ -56,6 +56,7 @@ struct SpvOptions {
     bool generateDebugInfo {false};
     bool stripDebugInfo {false};
     bool emitNonSemanticShaderDebugInfo {false};
+    bool emitNonSemanticShaderDebugSource{ false };
     bool disableOptimizer {true};
     bool optimizeSize {false};
     bool disassemble {false};

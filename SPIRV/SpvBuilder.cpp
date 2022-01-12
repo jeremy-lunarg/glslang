@@ -757,12 +757,28 @@ Id Builder::makeCompositeDebugType(std::vector<Id> const& memberTypes, char cons
 }
 
 Id Builder::makeDebugSource(const Id fileName) {
-    // If not already created, allocate an id for the DebugSource and add it to map.
-    // The DebugSource instructions will be created later during the binary dump.
-    if (debugSourceId.find(fileName) == debugSourceId.end()) {
-        debugSourceId[fileName] = getUniqueId();
+    if (debugSourceId.find(fileName) != debugSourceId.end())
+        return debugSourceId[fileName];
+    spv::Id resultId = getUniqueId();
+    Instruction* sourceInst = new Instruction(resultId, makeVoidType(), OpExtInst);
+    sourceInst->addIdOperand(nonSemanticShaderDebugInfo);
+    sourceInst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugSource);
+    sourceInst->addIdOperand(fileName);
+    if (emitNonSemanticShaderDebugSource) {
+        spv::Id sourceId = 0;
+        if (fileName == sourceFileStringId) {
+            sourceId = getStringId(sourceText);
+        } else {
+            auto incItr = includeFiles.find(fileName);
+            assert(incItr != includeFiles.end());
+            sourceId = getStringId(*incItr->second);
+        }
+        sourceInst->addIdOperand(sourceId);
     }
-    return debugSourceId[fileName];
+    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(sourceInst));
+    module.mapInstruction(sourceInst);
+    debugSourceId[fileName] = resultId;
+    return resultId;
 }
 
 #ifndef GLSLANG_WEB
@@ -3452,6 +3468,7 @@ void Builder::dumpSourceInstructions(const spv::Id fileId, const std::string& te
 // Dump an OpSource[Continued] sequence for the source and every include file
 void Builder::dumpSourceInstructions(std::vector<unsigned int>& out) const
 {
+    if (emitNonSemanticShaderDebugInfo) return;
     dumpSourceInstructions(sourceFileStringId, sourceText, out);
     for (auto iItr = includeFiles.begin(); iItr != includeFiles.end(); ++iItr)
         dumpSourceInstructions(iItr->first, *iItr->second, out);

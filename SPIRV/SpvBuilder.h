@@ -123,6 +123,10 @@ public:
             importNonSemanticShaderDebugInfoInstructions();
         }
     }
+    void setEmitNonSemanticShaderDebugSource(bool const src)
+    {
+        emitNonSemanticShaderDebugSource = src;
+    }
     void addExtension(const char* ext) { extensions.insert(ext); }
     void removeExtension(const char* ext)
     {
@@ -835,6 +839,7 @@ public:
     const char* currentFile;
     bool emitOpLines;
     bool emitNonSemanticShaderDebugInfo;
+    bool emitNonSemanticShaderDebugSource;
     std::set<std::string> extensions;
     std::vector<const char*> sourceExtensions;
     std::vector<const char*> moduleProcesses;
