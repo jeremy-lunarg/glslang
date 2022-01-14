@@ -86,7 +86,7 @@ public:
 
     void setSource(spv::SourceLanguage lang, int version)
     {
-        source = lang;
+        sourceLang = lang;
         sourceVersion = version;
     }
     spv::Id getStringId(const std::string& str)
@@ -209,6 +209,7 @@ public:
     Id makeMemberDebugType(Id const memberType);
     Id makeCompositeDebugType(std::vector<Id> const& memberTypes, char const*const name);
     Id makeDebugSource(const Id fileName);
+    Id makeDebugCompilationUnit();
 
     // accelerationStructureNV type
     Id makeAccelerationStructureType();
@@ -830,9 +831,10 @@ public:
         const;
 
     unsigned int spvVersion;     // the version of SPIR-V to emit in the header
-    SourceLanguage source;
+    SourceLanguage sourceLang;
     int sourceVersion;
     spv::Id sourceFileStringId;
+    spv::Id nonSemanticShaderCompilationUnitId {0};
     spv::Id nonSemanticShaderDebugInfo {0};
     std::string sourceText;
     int currentLine;

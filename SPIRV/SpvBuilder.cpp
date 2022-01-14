@@ -59,7 +59,7 @@ namespace spv {
 
 Builder::Builder(unsigned int spvVersion, unsigned int magicNumber, SpvBuildLogger* buildLogger) :
     spvVersion(spvVersion),
-    source(SourceLanguageUnknown),
+    sourceLang(SourceLanguageUnknown),
     sourceVersion(0),
     sourceFileStringId(NoResult),
     currentLine(0),
@@ -779,6 +779,23 @@ Id Builder::makeDebugSource(const Id fileName) {
     module.mapInstruction(sourceInst);
     debugSourceId[fileName] = resultId;
     return resultId;
+}
+
+Id Builder::makeDebugCompilationUnit() {
+  if (nonSemanticShaderCompilationUnitId != 0)
+    return nonSemanticShaderCompilationUnitId;
+  spv::Id resultId = getUniqueId();
+  Instruction* sourceInst = new Instruction(resultId, makeVoidType(), OpExtInst);
+  sourceInst->addIdOperand(nonSemanticShaderDebugInfo);
+  sourceInst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugCompilationUnit);
+  sourceInst->addIdOperand(makeUintConstant(1)); // TODO(greg-lunarg): Get rid of magic number
+  sourceInst->addIdOperand(makeUintConstant(4)); // TODO(greg-lunarg): Get rid of magic number
+  sourceInst->addIdOperand(makeDebugSource(sourceFileStringId));
+  sourceInst->addIdOperand(makeUintConstant(sourceLang));
+  constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(sourceInst));
+  module.mapInstruction(sourceInst);
+  nonSemanticShaderCompilationUnitId = resultId;
+  return resultId;
 }
 
 #ifndef GLSLANG_WEB
@@ -3432,10 +3449,10 @@ void Builder::dumpSourceInstructions(const spv::Id fileId, const std::string& te
     const int opSourceWordCount = 4;
     const int nonNullBytesPerInstruction = 4 * (maxWordCount - opSourceWordCount) - 1;
 
-    if (source != SourceLanguageUnknown) {
+    if (sourceLang != SourceLanguageUnknown) {
         // OpSource Language Version File Source
         Instruction sourceInst(NoResult, NoType, OpSource);
-        sourceInst.addImmediateOperand(source);
+        sourceInst.addImmediateOperand(sourceLang);
         sourceInst.addImmediateOperand(sourceVersion);
         // File operand
         if (fileId != NoResult) {
