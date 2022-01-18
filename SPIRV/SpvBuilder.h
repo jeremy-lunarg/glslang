@@ -179,6 +179,7 @@ public:
     void setLine(int line, const char* filename);
     // Low-level OpLine. See setLine() for a layered helper.
     void addLine(Id fileName, int line, int column);
+    void addDebugLine(Id fileName, int line, int column);
 
     // For creating new types (will return old type if the requested one was already made).
     Id makeVoidType();

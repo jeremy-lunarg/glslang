@@ -119,7 +119,10 @@ void Builder::setLine(int lineNum, const char* filename)
         currentFile = filename;
         if (emitOpLines) {
             spv::Id strId = getStringId(filename);
-            addLine(strId, currentLine, 0);
+            if (emitNonSemanticShaderDebugInfo)
+                addDebugLine(strId, currentLine, 0);
+            else
+                addLine(strId, currentLine, 0);
         }
     }
 }
@@ -131,6 +134,20 @@ void Builder::addLine(Id fileName, int lineNum, int column)
     line->addImmediateOperand(lineNum);
     line->addImmediateOperand(column);
     buildPoint->addInstruction(std::unique_ptr<Instruction>(line));
+}
+
+void Builder::addDebugLine(Id fileName, int lineNum, int column)
+{
+  spv::Id resultId = getUniqueId();
+  Instruction* lineInst = new Instruction(resultId, makeVoidType(), OpExtInst);
+  lineInst->addIdOperand(nonSemanticShaderDebugInfo);
+  lineInst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugLine);
+  lineInst->addIdOperand(makeDebugSource(fileName));
+  lineInst->addIdOperand(makeUintConstant(lineNum));
+  lineInst->addIdOperand(makeUintConstant(lineNum));
+  lineInst->addIdOperand(makeUintConstant(column));
+  lineInst->addIdOperand(makeUintConstant(column));
+  buildPoint->addInstruction(std::unique_ptr<Instruction>(lineInst));
 }
 
 // For creating new groupedTypes (will return old type if the requested one was already made).
