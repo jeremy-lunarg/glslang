@@ -204,9 +204,15 @@ public:
     Id makeGenericType(spv::Op opcode, std::vector<spv::IdImmediate>& operands);
 
     // SPIR-V NonSemantic Shader DebugInfo Instructions
+    struct DebugTypeLoc {
+        std::string name {};
+        int line {0};
+        int column {0};
+    };
+    std::unordered_map<Id, DebugTypeLoc> debugTypeLocs;
     Id makeFloatDebugType();
     Id makeVectorDebugType(Id const baseType, int const componentCount);
-    Id makeMemberDebugType(Id const memberType);
+    Id makeMemberDebugType(Id const memberType, DebugTypeLoc const& debugTypeLoc);
     Id makeCompositeDebugType(std::vector<Id> const& memberTypes, char const*const name);
     Id makeDebugSource(const Id fileName);
     Id makeDebugCompilationUnit();

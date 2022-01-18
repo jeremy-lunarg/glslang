@@ -4370,14 +4370,14 @@ spv::Id TGlslangToSpvTraverser::convertGlslangStructToSpvType(const glslang::TTy
                           // except sometimes for blocks
     std::vector<std::pair<glslang::TType*, glslang::TQualifier> > deferredForwardPointers;
     for (int i = 0; i < (int)glslangMembers->size(); i++) {
-        glslang::TType& glslangMember = *(*glslangMembers)[i].type;
-        if (glslangMember.hiddenMember()) {
+        auto& glslangMember = (*glslangMembers)[i];
+        if (glslangMember.type->hiddenMember()) {
             ++memberDelta;
             if (type.getBasicType() == glslang::EbtBlock)
                 memberRemapper[glslangTypeToIdMap[glslangMembers]][i] = -1;
         } else {
             if (type.getBasicType() == glslang::EbtBlock) {
-                if (filterMember(glslangMember)) {
+                if (filterMember(*glslangMember.type)) {
                     memberDelta++;
                     memberRemapper[glslangTypeToIdMap[glslangMembers]][i] = -1;
                     continue;
@@ -4385,7 +4385,7 @@ spv::Id TGlslangToSpvTraverser::convertGlslangStructToSpvType(const glslang::TTy
                 memberRemapper[glslangTypeToIdMap[glslangMembers]][i] = i - memberDelta;
             }
             // modify just this child's view of the qualifier
-            glslang::TQualifier memberQualifier = glslangMember.getQualifier();
+            glslang::TQualifier memberQualifier = glslangMember.type->getQualifier();
             InheritQualifiers(memberQualifier, qualifier);
 
             // manually inherit location
@@ -4396,19 +4396,32 @@ spv::Id TGlslangToSpvTraverser::convertGlslangStructToSpvType(const glslang::TTy
             bool lastBufferBlockMember = qualifier.storage == glslang::EvqBuffer &&
                                          i == (int)glslangMembers->size() - 1;
 
-            // Make forward pointers for any pointer members, and create a list of members to
-            // convert to spirv types after creating the struct.
-            if (glslangMember.isReference()) {
-                if (forwardPointers.find(glslangMember.getReferentType()) == forwardPointers.end()) {
-                    deferredForwardPointers.push_back(std::make_pair(&glslangMember, memberQualifier));
-                }
-                spvMembers.push_back(
-                    convertGlslangToSpvType(glslangMember, explicitLayout, memberQualifier, lastBufferBlockMember,
-                        true));
-            } else {
-                spvMembers.push_back(
-                    convertGlslangToSpvType(glslangMember, explicitLayout, memberQualifier, lastBufferBlockMember,
-                        false));
+            // Make forward pointers for any pointer members.
+            if (glslangMember.type->isReference() &&
+                forwardPointers.find(glslangMember.type->getReferentType()) == forwardPointers.end()) {
+                deferredForwardPointers.push_back(std::make_pair(glslangMember.type, memberQualifier));
+            }
+
+            // Create the member type.
+            auto const spvMember = convertGlslangToSpvType(*glslangMember.type, explicitLayout, memberQualifier, lastBufferBlockMember,
+                glslangMember.type->isReference());
+            spvMembers.push_back(spvMember);
+
+            // Update the builder with the type's location so that we can create debug types for the structure members.
+            // There doesn't exist a "clean" entry point for this information to be passed along to the builder so, for now,
+            // it is stored in the builder and consumed during the construction of composite debug types.
+            // TODO: This probably warrants further investigation. This approach was decided to be the least ugly of the
+            // quick and dirty approaches that were tried.
+            // Advantages of this approach:
+            //  + Relatively clean. No direct calls into debug type system.
+            //  + Handles nested recursive structures.
+            // Disadvantages of this approach:
+            //  + Not as clean as desired. Traverser queries/sets persistent state. This is fragile.
+            //  + Table lookup during creation of composite debug types. This really shouldn't be necessary.
+            if(options.emitNonSemanticShaderDebugInfo) {
+                builder.debugTypeLocs[spvMember].name = glslangMember.type->getFieldName().c_str();
+                builder.debugTypeLocs[spvMember].line = glslangMember.loc.line;
+                builder.debugTypeLocs[spvMember].column = glslangMember.loc.column;
             }
         }
     }

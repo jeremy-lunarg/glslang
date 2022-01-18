@@ -703,16 +703,16 @@ Id Builder::makeVectorDebugType(Id const baseType, int const componentCount)
     return type->getResultId();
 }
 
-Id Builder::makeMemberDebugType(Id const memberType)
+Id Builder::makeMemberDebugType(Id const memberType, DebugTypeLoc const& debugTypeLoc)
 {
     Instruction* type = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
     type->addIdOperand(nonSemanticShaderDebugInfo);
     type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeMember);
-    type->addIdOperand(getStringId("TODO")); // TODO: name id
+    type->addIdOperand(getStringId(debugTypeLoc.name)); // name id
     type->addIdOperand(debugTypeId[memberType]); // type id
-    type->addIdOperand(makeDebugSource(sourceFileStringId)); // TODO: source id must handle include directives
-    type->addIdOperand(makeUintConstant(0)); // TODO: line id
-    type->addIdOperand(makeUintConstant(0)); // TODO: column id
+    type->addIdOperand(makeDebugSource(sourceFileStringId)); // source id TODO: verify this works across include directives
+    type->addIdOperand(makeUintConstant(debugTypeLoc.line)); // line id TODO: currentLine is always zero
+    type->addIdOperand(makeUintConstant(debugTypeLoc.column)); // TODO: column id
     type->addIdOperand(makeUintConstant(0)); // TODO: offset id
     type->addIdOperand(makeUintConstant(0)); // TODO: size id
     type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100FlagIsPublic)); // flags id
@@ -726,20 +726,24 @@ Id Builder::makeMemberDebugType(Id const memberType)
 
 Id Builder::makeCompositeDebugType(std::vector<Id> const& memberTypes, char const*const name)
 {
-    // Generate DebutTypeMember instructions.
+    // Create the debug member types.
     std::vector<Id> memberDebugTypes;
-    memberDebugTypes.reserve(memberTypes.size());
     for(auto const memberType : memberTypes) {
-        memberDebugTypes.emplace_back(makeMemberDebugType(memberType));
+        assert(debugTypeLocs.find(memberType) != debugTypeLocs.end());
+
+        memberDebugTypes.emplace_back(makeMemberDebugType(memberType, debugTypeLocs[memberType]));
+
+        debugTypeLocs.erase(memberType);
     }
 
+    // Create The structure debug type.
     Instruction* type = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
     type->addIdOperand(nonSemanticShaderDebugInfo);
     type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeComposite);
-    type->addIdOperand(getStringId(name)); // TODO: name id
+    type->addIdOperand(getStringId(name)); // name id
     type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100Structure)); // tag id
-    type->addIdOperand(makeDebugSource(sourceFileStringId)); // TODO: source id must handle include directives
-    type->addIdOperand(makeUintConstant(0)); // TODO: line id
+    type->addIdOperand(makeDebugSource(sourceFileStringId)); // source id TODO: verify this works across include directives
+    type->addIdOperand(makeUintConstant(currentLine)); // line id TODO: currentLine always zero?
     type->addIdOperand(makeUintConstant(0)); // TODO: column id
     type->addIdOperand(getStringId("TODO")); // TODO: scope id
     type->addIdOperand(getStringId("TODO")); // TODO: linkage name id
