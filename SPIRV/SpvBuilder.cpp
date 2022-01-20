@@ -832,7 +832,7 @@ Id Builder::makeDebugCompilationUnit() {
     return resultId;
 }
 
-Id Builder::createDebugGlobalVariable(Id type, char const*const name)
+Id Builder::createDebugGlobalVariable(Id const type, char const*const name)
 {
     Instruction* inst = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
     inst->addIdOperand(nonSemanticShaderDebugInfo);
@@ -867,6 +867,9 @@ Id Builder::createDebugLocalVariable(Id type, char const*const name)
     inst->addIdOperand(getStringId("TODO")); // TODO: scope id
     inst->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100FlagIsLocal)); // flags id
     inst->addIdOperand(getStringId("TODO")); // TODO: ArgNumber id; optional one-based index if formal parameter 
+
+    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(inst));
+    module.mapInstruction(inst);
 
     return inst->getResultId();
 }
@@ -1792,23 +1795,31 @@ Id Builder::createVariable(Decoration precision, StorageClass storageClass, Id t
     case StorageClassFunction:
         // Validation rules require the declaration in the entry block
         buildPoint->getParent().addLocalVariable(std::unique_ptr<Instruction>(inst));
+
+        if (emitNonSemanticShaderDebugInfo)
+        {
+            auto const debugResultId = createDebugLocalVariable(type, name);
+            debugId[inst->getResultId()] = debugResultId;
+        }
+
         break;
 
     default:
         constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(inst));
         module.mapInstruction(inst);
+
+        if (emitNonSemanticShaderDebugInfo)
+        {
+            auto const debugResultId = createDebugGlobalVariable(type, name);
+            debugId[inst->getResultId()] = debugResultId;
+        }
+
         break;
     }
 
     if (name)
         addName(inst->getResultId(), name);
     setPrecision(inst->getResultId(), precision);
-
-    if (emitNonSemanticShaderDebugInfo)
-    {
-        auto const debugResultId = createDebugGlobalVariable(type, name);
-        debugId[inst->getResultId()] = debugResultId;
-    }
 
     return inst->getResultId();
 }

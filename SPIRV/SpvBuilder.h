@@ -218,7 +218,7 @@ public:
     Id makeCompositeDebugType(std::vector<Id> const& memberTypes, char const*const name);
     Id makeDebugSource(const Id fileName);
     Id makeDebugCompilationUnit();
-    Id createDebugGlobalVariable(Id type, char const*const name);
+    Id createDebugGlobalVariable(Id const type, char const*const name);
     Id createDebugLocalVariable(Id type, char const*const name);
 
     // accelerationStructureNV type
