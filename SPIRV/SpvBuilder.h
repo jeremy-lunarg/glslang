@@ -211,12 +211,15 @@ public:
         int column {0};
     };
     std::unordered_map<Id, DebugTypeLoc> debugTypeLocs;
+    Id makeDebugInfoNone();
     Id makeFloatDebugType();
     Id makeVectorDebugType(Id const baseType, int const componentCount);
     Id makeMemberDebugType(Id const memberType, DebugTypeLoc const& debugTypeLoc);
     Id makeCompositeDebugType(std::vector<Id> const& memberTypes, char const*const name);
     Id makeDebugSource(const Id fileName);
     Id makeDebugCompilationUnit();
+    Id createDebugGlobalVariable(Id type, char const*const name);
+    Id createDebugLocalVariable(Id type, char const*const name);
 
     // accelerationStructureNV type
     Id makeAccelerationStructureType();
@@ -843,6 +846,7 @@ public:
     spv::Id sourceFileStringId;
     spv::Id nonSemanticShaderCompilationUnitId {0};
     spv::Id nonSemanticShaderDebugInfo {0};
+    spv::Id debugInfoNone {0};
     std::string sourceText;
     int currentLine;
     const char* currentFile;
@@ -899,8 +903,8 @@ public:
     // map from include file name ids to their contents
     std::map<spv::Id, const std::string*> includeFiles;
 
-    // map from basic type-id to debug type-id
-    std::map <spv::Id, spv::Id> debugTypeId;
+    // map from core id to debug id
+    std::map <spv::Id, spv::Id> debugId;
 
     // map from file name string id to DebugSource id
     std::unordered_map<spv::Id, spv::Id> debugSourceId;
