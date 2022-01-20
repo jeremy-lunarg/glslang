@@ -1804,15 +1804,20 @@ Id Builder::createVariable(Decoration precision, StorageClass storageClass, Id t
 
         break;
 
-    default:
-        constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(inst));
-        module.mapInstruction(inst);
-
+    case StorageClassUniformConstant:
         if (emitNonSemanticShaderDebugInfo)
         {
             auto const debugResultId = createDebugGlobalVariable(type, name, inst->getResultId());
             debugId[inst->getResultId()] = debugResultId;
         }
+
+        constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(inst));
+        module.mapInstruction(inst);
+        break;
+
+    default:
+        constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(inst));
+        module.mapInstruction(inst);
 
         break;
     }
