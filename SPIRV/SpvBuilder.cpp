@@ -679,7 +679,12 @@ Id Builder::makeDebugInfoNone()
     inst->addIdOperand(nonSemanticShaderDebugInfo);
     inst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugInfoNone);
 
-    return inst->getResultId();
+    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(inst));
+    module.mapInstruction(inst);
+
+    debugInfoNone = inst->getResultId();
+
+    return debugInfoNone;
 }
 
 Id Builder::makeFloatDebugType()
