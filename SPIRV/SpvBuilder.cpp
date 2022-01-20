@@ -832,7 +832,7 @@ Id Builder::makeDebugCompilationUnit() {
     return resultId;
 }
 
-Id Builder::createDebugGlobalVariable(Id const type, char const*const name)
+Id Builder::createDebugGlobalVariable(Id const type, char const*const name, Id const variable)
 {
     Instruction* inst = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
     inst->addIdOperand(nonSemanticShaderDebugInfo);
@@ -843,8 +843,8 @@ Id Builder::createDebugGlobalVariable(Id const type, char const*const name)
     inst->addIdOperand(makeUintConstant(currentLine)); // line id TODO: currentLine always zero?
     inst->addIdOperand(makeUintConstant(0)); // TODO: column id
     inst->addIdOperand(makeDebugCompilationUnit()); // scope id
-    inst->addIdOperand(getStringId("TODO")); // TODO: linkage name id
-    inst->addIdOperand(makeDebugInfoNone()); // TODO: variable id
+    inst->addIdOperand(makeDebugInfoNone()); // TODO: linkage name id
+    inst->addIdOperand(variable); // variable id
     inst->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100FlagIsDefinition)); // flags id
     inst->addIdOperand(getStringId("TODO")); // TODO: ArgNumber id; optional one-based index if formal parameter 
 
@@ -1810,7 +1810,7 @@ Id Builder::createVariable(Decoration precision, StorageClass storageClass, Id t
 
         if (emitNonSemanticShaderDebugInfo)
         {
-            auto const debugResultId = createDebugGlobalVariable(type, name);
+            auto const debugResultId = createDebugGlobalVariable(type, name, inst->getResultId());
             debugId[inst->getResultId()] = debugResultId;
         }
 
