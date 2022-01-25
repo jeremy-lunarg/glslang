@@ -155,10 +155,14 @@ Id Builder::makeVoidType()
 {
     Instruction* type;
     if (groupedTypes[OpTypeVoid].size() == 0) {
-        type = new Instruction(getUniqueId(), NoType, OpTypeVoid);
+        Id typeId = getUniqueId();
+        type = new Instruction(typeId, NoType, OpTypeVoid);
         groupedTypes[OpTypeVoid].push_back(type);
         constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
         module.mapInstruction(type);
+        // Core OpTypeVoid used for debug void type
+        if (emitNonSemanticShaderDebugInfo)
+            debugId[typeId] = typeId;
     } else
         type = groupedTypes[OpTypeVoid].back();
 
@@ -553,7 +557,8 @@ Id Builder::makeFunctionType(Id returnType, const std::vector<Id>& paramTypes)
     }
 
     // not found, make it
-    type = new Instruction(getUniqueId(), NoType, OpTypeFunction);
+    Id typeId = getUniqueId();
+    type = new Instruction(typeId, NoType, OpTypeFunction);
     type->addIdOperand(returnType);
     for (int p = 0; p < (int)paramTypes.size(); ++p)
         type->addIdOperand(paramTypes[p]);
@@ -561,7 +566,28 @@ Id Builder::makeFunctionType(Id returnType, const std::vector<Id>& paramTypes)
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
     module.mapInstruction(type);
 
+    // make debug type and map it
+    if (emitNonSemanticShaderDebugInfo) {
+        Id debugTypeId = makeDebugFunctionType(returnType, paramTypes);
+        debugId[typeId] = debugTypeId;
+    }
+
     return type->getResultId();
+}
+
+Id Builder::makeDebugFunctionType(Id returnType, const std::vector<Id>& paramTypes)
+{
+    Id typeId = getUniqueId();
+    auto type = new Instruction(typeId, makeVoidType(), OpExtInst);
+    type->addIdOperand(nonSemanticShaderDebugInfo);
+    type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeFunction);
+    type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100FlagIsPublic));
+    type->addIdOperand(debugId[returnType]);
+    for (int p = 0; p < (int)paramTypes.size(); ++p)
+        type->addIdOperand(debugId[paramTypes[p]]);
+    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
+    module.mapInstruction(type);
+    return typeId;
 }
 
 Id Builder::makeImageType(Id sampledType, Dim dim, bool depth, bool arrayed, bool ms, unsigned sampled,
@@ -1722,7 +1748,8 @@ Function* Builder::makeFunctionEntry(Decoration precision, Id returnType, const 
     // Make the function and initial instructions in it
     Id typeId = makeFunctionType(returnType, paramTypes);
     Id firstParamId = paramTypes.size() == 0 ? 0 : getUniqueIds((int)paramTypes.size());
-    Function* function = new Function(getUniqueId(), returnType, typeId, firstParamId, module);
+    Id funcId = getUniqueId();
+    Function* function = new Function(funcId, returnType, typeId, firstParamId, module);
 
     // Set up the precisions
     setPrecision(function->getId(), precision);
@@ -1732,6 +1759,13 @@ Function* Builder::makeFunctionEntry(Decoration precision, Id returnType, const 
             addDecoration(firstParamId + p, decorations[p][d]);
             function->addParamPrecision(p, decorations[p][d]);
         }
+    }
+
+    // Make the debug function instruction
+    if (emitNonSemanticShaderDebugInfo) {
+        Id nameId = getStringId(name);
+        Id debugFuncId = makeDebugFunction(function, nameId, typeId);
+        debugId[funcId] = debugFuncId;
     }
 
     // CFG
@@ -1747,6 +1781,25 @@ Function* Builder::makeFunctionEntry(Decoration precision, Id returnType, const 
     functions.push_back(std::unique_ptr<Function>(function));
 
     return function;
+}
+
+Id Builder::makeDebugFunction(Function* function, Id nameId, Id funcTypeId) {
+    Id funcId = getUniqueId();
+    auto type = new Instruction(funcId, makeVoidType(), OpExtInst);
+    type->addIdOperand(nonSemanticShaderDebugInfo);
+    type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugFunction);
+    type->addIdOperand(nameId);
+    type->addIdOperand(debugId[funcTypeId]);
+    type->addIdOperand(makeDebugSource(sourceFileStringId)); // Will be fixed later when true filename available
+    type->addIdOperand(makeUintConstant(currentLine)); // Will be fixed later when true line available
+    type->addIdOperand(makeUintConstant(0)); // column
+    type->addIdOperand(makeDebugCompilationUnit()); // scope
+    type->addIdOperand(nameId); // linkage name
+    type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100FlagIsPublic));
+    type->addIdOperand(makeUintConstant(currentLine)); // TODO(greg-lunarg): correct scope line
+    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
+    module.mapInstruction(type);
+    return funcId;
 }
 
 // Comments in header

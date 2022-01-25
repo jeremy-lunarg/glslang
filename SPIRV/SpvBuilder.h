@@ -220,6 +220,8 @@ public:
     Id makeDebugCompilationUnit();
     Id createDebugGlobalVariable(Id const type, char const*const name, Id const variable);
     Id createDebugLocalVariable(Id type, char const*const name);
+    Id makeDebugFunctionType(Id returnType, const std::vector<Id>& paramTypes);
+    Id makeDebugFunction(Function* function, Id nameId, Id funcTypeId);
 
     // accelerationStructureNV type
     Id makeAccelerationStructureType();
