@@ -1896,7 +1896,7 @@ Id Builder::createVariable(Decoration precision, StorageClass storageClass, Id t
 
         if (emitNonSemanticShaderDebugInfo)
         {
-            auto const debugResultId = createDebugLocalVariable(type, name);
+            auto const debugResultId = createDebugLocalVariable(debugId[type], name);
             debugId[inst->getResultId()] = debugResultId;
         }
 
@@ -1905,7 +1905,7 @@ Id Builder::createVariable(Decoration precision, StorageClass storageClass, Id t
     case StorageClassUniformConstant:
         if (emitNonSemanticShaderDebugInfo)
         {
-            auto const debugResultId = createDebugGlobalVariable(type, name, inst->getResultId());
+            auto const debugResultId = createDebugGlobalVariable(debugId[type], name, inst->getResultId());
             debugId[inst->getResultId()] = debugResultId;
         }
 
