@@ -106,6 +106,7 @@ public:
     void setSourceFile(const std::string& file)
     {
         sourceFileStringId = getStringId(file);
+        currentFileId = sourceFileStringId;
     }
     void setSourceText(const std::string& text) { sourceText = text; }
     void addSourceExtension(const char* ext) { sourceExtensions.push_back(ext); }
@@ -179,7 +180,7 @@ public:
     void setLine(int line, const char* filename);
     // Low-level OpLine. See setLine() for a layered helper.
     void addLine(Id fileName, int line, int column);
-    void addDebugLine(Id fileName, int line, int column);
+    void addDebugScopeAndLine(Id fileName, int line, int column);
 
     // For creating new types (will return old type if the requested one was already made).
     Id makeVoidType();
@@ -222,6 +223,7 @@ public:
     Id createDebugLocalVariable(Id type, char const*const name);
     Id makeDebugFunctionType(Id returnType, const std::vector<Id>& paramTypes);
     Id makeDebugFunction(Function* function, Id nameId, Id funcTypeId);
+    Id makeDebugLexicalBlock();
 
     // accelerationStructureNV type
     Id makeAccelerationStructureType();
@@ -852,6 +854,9 @@ public:
     std::string sourceText;
     int currentLine;
     const char* currentFile;
+    spv::Id currentFileId;
+    std::stack<spv::Id> currentScopeId;
+    spv::Id lastScopeId;
     bool emitOpLines;
     bool emitNonSemanticShaderDebugInfo;
     bool emitNonSemanticShaderDebugSource;
