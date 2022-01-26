@@ -64,6 +64,8 @@ Builder::Builder(unsigned int spvVersion, unsigned int magicNumber, SpvBuildLogg
     sourceFileStringId(NoResult),
     currentLine(0),
     currentFile(nullptr),
+    currentFileId(NoResult),
+    lastDebugScopeId(NoResult),
     emitOpLines(false),
     emitNonSemanticShaderDebugInfo(false),
     addressModel(AddressingModelLogical),
@@ -99,8 +101,12 @@ void Builder::setLine(int lineNum)
 {
     if (lineNum != 0 && lineNum != currentLine) {
         currentLine = lineNum;
-        if (emitOpLines)
-            addLine(sourceFileStringId, currentLine, 0);
+        if (emitOpLines) {
+          if (emitNonSemanticShaderDebugInfo)
+              addDebugScopeAndLine(currentFileId, currentLine, 0);
+          else
+              addLine(sourceFileStringId, currentLine, 0);
+        }
     }
 }
 
@@ -120,7 +126,7 @@ void Builder::setLine(int lineNum, const char* filename)
         if (emitOpLines) {
             spv::Id strId = getStringId(filename);
             if (emitNonSemanticShaderDebugInfo)
-                addDebugLine(strId, currentLine, 0);
+                addDebugScopeAndLine(strId, currentLine, 0);
             else
                 addLine(strId, currentLine, 0);
         }
@@ -136,18 +142,27 @@ void Builder::addLine(Id fileName, int lineNum, int column)
     buildPoint->addInstruction(std::unique_ptr<Instruction>(line));
 }
 
-void Builder::addDebugLine(Id fileName, int lineNum, int column)
+void Builder::addDebugScopeAndLine(Id fileName, int lineNum, int column)
 {
-  spv::Id resultId = getUniqueId();
-  Instruction* lineInst = new Instruction(resultId, makeVoidType(), OpExtInst);
-  lineInst->addIdOperand(nonSemanticShaderDebugInfo);
-  lineInst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugLine);
-  lineInst->addIdOperand(makeDebugSource(fileName));
-  lineInst->addIdOperand(makeUintConstant(lineNum));
-  lineInst->addIdOperand(makeUintConstant(lineNum));
-  lineInst->addIdOperand(makeUintConstant(column));
-  lineInst->addIdOperand(makeUintConstant(column));
-  buildPoint->addInstruction(std::unique_ptr<Instruction>(lineInst));
+    if (currentDebugScopeId.top() != lastDebugScopeId) {
+        spv::Id resultId = getUniqueId();
+        Instruction* scopeInst = new Instruction(resultId, makeVoidType(), OpExtInst);
+        scopeInst->addIdOperand(nonSemanticShaderDebugInfo);
+        scopeInst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugScope);
+        scopeInst->addIdOperand(currentDebugScopeId.top());
+        buildPoint->addInstruction(std::unique_ptr<Instruction>(scopeInst));
+        lastDebugScopeId = currentDebugScopeId.top();
+    }
+    spv::Id resultId = getUniqueId();
+    Instruction* lineInst = new Instruction(resultId, makeVoidType(), OpExtInst);
+    lineInst->addIdOperand(nonSemanticShaderDebugInfo);
+    lineInst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugLine);
+    lineInst->addIdOperand(makeDebugSource(fileName));
+    lineInst->addIdOperand(makeUintConstant(lineNum));
+    lineInst->addIdOperand(makeUintConstant(lineNum));
+    lineInst->addIdOperand(makeUintConstant(column));
+    lineInst->addIdOperand(makeUintConstant(column));
+    buildPoint->addInstruction(std::unique_ptr<Instruction>(lineInst));
 }
 
 // For creating new groupedTypes (will return old type if the requested one was already made).
@@ -1793,13 +1808,19 @@ Function* Builder::makeFunctionEntry(Decoration precision, Id returnType, const 
         Id nameId = getStringId(name);
         Id debugFuncId = makeDebugFunction(function, nameId, typeId);
         debugId[funcId] = debugFuncId;
+        currentDebugScopeId.push(debugFuncId);
+        lastDebugScopeId = NoResult;
     }
 
     // CFG
-    if (entry) {
-        *entry = new Block(getUniqueId(), *function);
-        function->addBlock(*entry);
-        setBuildPoint(*entry);
+    assert(entry != nullptr);
+    *entry = new Block(getUniqueId(), *function);
+    function->addBlock(*entry);
+    setBuildPoint(*entry);
+
+    // DebugScope and DebugLine for parameter DebugDeclares
+    if (emitNonSemanticShaderDebugInfo && (int)paramTypes.size() > 0) {
+        addDebugScopeAndLine(currentFileId, currentLine, 0);
     }
 
     if (emitNonSemanticShaderDebugInfo) {
@@ -1822,6 +1843,10 @@ Function* Builder::makeFunctionEntry(Decoration precision, Id returnType, const 
 
     functions.push_back(std::unique_ptr<Function>(function));
 
+    // Clear debug scope stack
+    if (emitNonSemanticShaderDebugInfo)
+        currentDebugScopeId.pop();
+
     return function;
 }
 
@@ -1832,7 +1857,7 @@ Id Builder::makeDebugFunction(Function* function, Id nameId, Id funcTypeId) {
     type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugFunction);
     type->addIdOperand(nameId);
     type->addIdOperand(debugId[funcTypeId]);
-    type->addIdOperand(makeDebugSource(sourceFileStringId)); // Will be fixed later when true filename available
+    type->addIdOperand(makeDebugSource(currentFileId)); // Will be fixed later when true filename available
     type->addIdOperand(makeUintConstant(currentLine)); // Will be fixed later when true line available
     type->addIdOperand(makeUintConstant(0)); // column
     type->addIdOperand(makeDebugCompilationUnit()); // scope
@@ -1842,6 +1867,20 @@ Id Builder::makeDebugFunction(Function* function, Id nameId, Id funcTypeId) {
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
     module.mapInstruction(type);
     return funcId;
+}
+
+Id Builder::makeDebugLexicalBlock() {
+    Id lexId = getUniqueId();
+    auto lex = new Instruction(lexId, makeVoidType(), OpExtInst);
+    lex->addIdOperand(nonSemanticShaderDebugInfo);
+    lex->addImmediateOperand(NonSemanticShaderDebugInfo100DebugLexicalBlock);
+    lex->addIdOperand(makeDebugSource(currentFileId)); // Will be fixed later when true filename available
+    lex->addIdOperand(makeUintConstant(currentLine)); // Will be fixed later when true line available
+    lex->addIdOperand(makeUintConstant(0)); // column
+    lex->addIdOperand(currentDebugScopeId.top()); // scope
+    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(lex));
+    module.mapInstruction(lex);
+    return lexId;
 }
 
 // Comments in header
@@ -1861,9 +1900,19 @@ void Builder::makeReturn(bool implicit, Id retVal)
 // Comments in header
 void Builder::enterFunction(Function const* function)
 {
+    // Save and disable debugInfo for HLSL entry point function. It is a wrapper
+    // function with no user code in it.
     restoreNonSemanticShaderDebugInfo = emitNonSemanticShaderDebugInfo;
-    if(sourceLang == spv::SourceLanguageHLSL && function == entryPointFunction) {
+    if (sourceLang == spv::SourceLanguageHLSL && function == entryPointFunction) {
         emitNonSemanticShaderDebugInfo = false;
+    }
+
+    // Create and push debug lexical block for outermost scope
+    if (emitNonSemanticShaderDebugInfo) {
+        currentDebugScopeId.push(debugId[function->getFuncId()]);
+        Id lexId = makeDebugLexicalBlock();
+        currentDebugScopeId.push(lexId);
+        lastDebugScopeId = NoResult;
     }
 }
 
@@ -1881,6 +1930,12 @@ void Builder::leaveFunction()
         else {
             makeReturn(true, createUndefined(function.getReturnType()));
         }
+    }
+
+    // Clear debug scope stack
+    if (emitNonSemanticShaderDebugInfo) {
+        currentDebugScopeId.pop(); // Outermost lexical scope
+        currentDebugScopeId.pop(); // Function scope
     }
 
     emitNonSemanticShaderDebugInfo = restoreNonSemanticShaderDebugInfo;
