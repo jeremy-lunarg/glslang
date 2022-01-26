@@ -209,6 +209,13 @@ Id Builder::makeSamplerType()
     } else
         type = groupedTypes[OpTypeSampler].back();
 
+    if (emitNonSemanticShaderDebugInfo)
+    {
+        // TODO: Build a unique string for the name prepended with "@".
+        auto const debugResultId = makeCompositeDebugType({}, "@TODO_sampler", NonSemanticShaderDebugInfo100Structure);
+        debugId[type->getResultId()] = debugResultId;
+    }
+
     return type->getResultId();
 }
 
@@ -371,7 +378,7 @@ Id Builder::makeStructType(const std::vector<Id>& members, const char* name)
 
     if (emitNonSemanticShaderDebugInfo)
     {
-        auto const debugResultId = makeCompositeDebugType(members, name);
+        auto const debugResultId = makeCompositeDebugType(members, name, NonSemanticShaderDebugInfo100Structure);
         debugId[type->getResultId()] = debugResultId;
     }
 
@@ -686,6 +693,13 @@ Id Builder::makeImageType(Id sampledType, Dim dim, bool depth, bool arrayed, boo
     }
 #endif
 
+    if (emitNonSemanticShaderDebugInfo)
+    {
+        // TODO: Build a unique string for the name prepended with "@".
+        auto const debugResultId = makeCompositeDebugType({}, "@TODO_image", NonSemanticShaderDebugInfo100Class);
+        debugId[type->getResultId()] = debugResultId;
+    }
+
     return type->getResultId();
 }
 
@@ -800,7 +814,10 @@ Id Builder::makeMemberDebugType(Id const memberType, DebugTypeLoc const& debugTy
     return type->getResultId();
 }
 
-Id Builder::makeCompositeDebugType(std::vector<Id> const& memberTypes, char const*const name)
+// Note: To represent a source language opaque type, this instruction must have no Members operands, Size operand must be
+// DebugInfoNone, and Name must start with @ to avoid clashes with user defined names.
+Id Builder::makeCompositeDebugType(std::vector<Id> const& memberTypes, char const*const name,
+    NonSemanticShaderDebugInfo100DebugCompositeType const tag)
 {
     // Create the debug member types.
     std::vector<Id> memberDebugTypes;
@@ -817,7 +834,7 @@ Id Builder::makeCompositeDebugType(std::vector<Id> const& memberTypes, char cons
     type->addIdOperand(nonSemanticShaderDebugInfo);
     type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeComposite);
     type->addIdOperand(getStringId(name)); // name id
-    type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100Structure)); // tag id
+    type->addIdOperand(makeUintConstant(tag)); // tag id
     type->addIdOperand(makeDebugSource(sourceFileStringId)); // source id TODO: verify this works across include directives
     type->addIdOperand(makeUintConstant(currentLine)); // line id TODO: currentLine always zero?
     type->addIdOperand(makeUintConstant(0)); // TODO: column id
