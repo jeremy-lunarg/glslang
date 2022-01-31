@@ -401,7 +401,7 @@ public:
     void makeReturn(bool implicit, Id retVal = 0);
 
     // Prepare builder for generation of instructions for a function.
-    void enterFunction();
+    void enterFunction(Function const* function);
 
     // Generate all the code needed to finish up a function.
     void leaveFunction();
@@ -858,6 +858,7 @@ public:
     const char* currentFile;
     bool emitOpLines;
     bool emitNonSemanticShaderDebugInfo;
+    bool restoreNonSemanticShaderDebugInfo;
     bool emitNonSemanticShaderDebugSource;
     std::set<std::string> extensions;
     std::vector<const char*> sourceExtensions;

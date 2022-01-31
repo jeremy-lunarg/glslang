@@ -2774,6 +2774,7 @@ bool TGlslangToSpvTraverser::visitAggregate(glslang::TVisit visit, glslang::TInt
             if (isShaderEntryPoint(node)) {
                 inEntryPoint = true;
                 builder.setBuildPoint(shaderEntry->getLastBlock());
+                builder.enterFunction(shaderEntry);
                 currentFunction = shaderEntry;
             } else {
                 handleFunctionEntry(node);
@@ -5137,8 +5138,8 @@ void TGlslangToSpvTraverser::handleFunctionEntry(const glslang::TIntermAggregate
     // that called makeFunctions().
     currentFunction = functionMap[node->getName().c_str()];
     spv::Block* functionBlock = currentFunction->getEntryBlock();
-    builder.enterFunction();
     builder.setBuildPoint(functionBlock);
+    builder.enterFunction(currentFunction);
 }
 
 void TGlslangToSpvTraverser::translateArguments(const glslang::TIntermAggregate& node, std::vector<spv::Id>& arguments,

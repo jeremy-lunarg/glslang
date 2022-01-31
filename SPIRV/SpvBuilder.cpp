@@ -1754,7 +1754,14 @@ Function* Builder::makeEntryPoint(const char* entryPoint)
     std::vector<Id> params;
     std::vector<std::vector<Decoration>> decorations;
 
+    restoreNonSemanticShaderDebugInfo = emitNonSemanticShaderDebugInfo;
+    if(sourceLang == spv::SourceLanguageHLSL) {
+        emitNonSemanticShaderDebugInfo = false;
+    }
+
     entryPointFunction = makeFunctionEntry(NoPrecision, makeVoidType(), entryPoint, params, decorations, &entry);
+
+    emitNonSemanticShaderDebugInfo = restoreNonSemanticShaderDebugInfo;
 
     return entryPointFunction;
 }
@@ -1836,8 +1843,12 @@ void Builder::makeReturn(bool implicit, Id retVal)
 }
 
 // Comments in header
-void Builder::enterFunction()
+void Builder::enterFunction(Function const* function)
 {
+    restoreNonSemanticShaderDebugInfo = emitNonSemanticShaderDebugInfo;
+    if(sourceLang == spv::SourceLanguageHLSL && function == entryPointFunction) {
+        emitNonSemanticShaderDebugInfo = false;
+    }
 }
 
 // Comments in header
@@ -1855,6 +1866,8 @@ void Builder::leaveFunction()
             makeReturn(true, createUndefined(function.getReturnType()));
         }
     }
+
+    emitNonSemanticShaderDebugInfo = restoreNonSemanticShaderDebugInfo;
 }
 
 // Comments in header
