@@ -605,8 +605,10 @@ Id Builder::makeDebugFunctionType(Id returnType, const std::vector<Id>& paramTyp
     type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeFunction);
     type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100FlagIsPublic));
     type->addIdOperand(debugId[returnType]);
-    for (int p = 0; p < (int)paramTypes.size(); ++p)
-        type->addIdOperand(debugId[paramTypes[p]]);
+    for (auto const paramType : paramTypes) {
+        assert(isPointerType(paramType));
+        type->addIdOperand(debugId[getContainedTypeId(paramType)]);
+    }
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
     module.mapInstruction(type);
     return typeId;
