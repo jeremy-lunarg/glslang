@@ -64,8 +64,6 @@ Builder::Builder(unsigned int spvVersion, unsigned int magicNumber, SpvBuildLogg
     sourceFileStringId(NoResult),
     currentLine(0),
     currentFile(nullptr),
-    currentFileId(NoResult),
-    lastScopeId(NoResult),
     emitOpLines(false),
     emitNonSemanticShaderDebugInfo(false),
     addressModel(AddressingModelLogical),
@@ -101,12 +99,8 @@ void Builder::setLine(int lineNum)
 {
     if (lineNum != 0 && lineNum != currentLine) {
         currentLine = lineNum;
-        if (emitOpLines) {
-          if (emitNonSemanticShaderDebugInfo)
-              addDebugScopeAndLine(currentFileId, currentLine, 0);
-          else
-              addLine(sourceFileStringId, currentLine, 0);
-        }
+        if (emitOpLines)
+            addLine(sourceFileStringId, currentLine, 0);
     }
 }
 
@@ -126,7 +120,7 @@ void Builder::setLine(int lineNum, const char* filename)
         if (emitOpLines) {
             spv::Id strId = getStringId(filename);
             if (emitNonSemanticShaderDebugInfo)
-                addDebugScopeAndLine(strId, currentLine, 0);
+                addDebugLine(strId, currentLine, 0);
             else
                 addLine(strId, currentLine, 0);
         }
@@ -142,27 +136,18 @@ void Builder::addLine(Id fileName, int lineNum, int column)
     buildPoint->addInstruction(std::unique_ptr<Instruction>(line));
 }
 
-void Builder::addDebugScopeAndLine(Id fileName, int lineNum, int column)
+void Builder::addDebugLine(Id fileName, int lineNum, int column)
 {
-    if (currentScopeId.top() != lastScopeId) {
-        spv::Id resultId = getUniqueId();
-        Instruction* scopeInst = new Instruction(resultId, makeVoidType(), OpExtInst);
-        scopeInst->addIdOperand(nonSemanticShaderDebugInfo);
-        scopeInst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugScope);
-        scopeInst->addIdOperand(currentScopeId.top());
-        buildPoint->addInstruction(std::unique_ptr<Instruction>(scopeInst));
-        lastScopeId = currentScopeId.top();
-    }
-    spv::Id resultId = getUniqueId();
-    Instruction* lineInst = new Instruction(resultId, makeVoidType(), OpExtInst);
-    lineInst->addIdOperand(nonSemanticShaderDebugInfo);
-    lineInst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugLine);
-    lineInst->addIdOperand(makeDebugSource(fileName));
-    lineInst->addIdOperand(makeUintConstant(lineNum));
-    lineInst->addIdOperand(makeUintConstant(lineNum));
-    lineInst->addIdOperand(makeUintConstant(column));
-    lineInst->addIdOperand(makeUintConstant(column));
-    buildPoint->addInstruction(std::unique_ptr<Instruction>(lineInst));
+  spv::Id resultId = getUniqueId();
+  Instruction* lineInst = new Instruction(resultId, makeVoidType(), OpExtInst);
+  lineInst->addIdOperand(nonSemanticShaderDebugInfo);
+  lineInst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugLine);
+  lineInst->addIdOperand(makeDebugSource(fileName));
+  lineInst->addIdOperand(makeUintConstant(lineNum));
+  lineInst->addIdOperand(makeUintConstant(lineNum));
+  lineInst->addIdOperand(makeUintConstant(column));
+  lineInst->addIdOperand(makeUintConstant(column));
+  buildPoint->addInstruction(std::unique_ptr<Instruction>(lineInst));
 }
 
 // For creating new groupedTypes (will return old type if the requested one was already made).
@@ -1814,12 +1799,6 @@ Function* Builder::makeFunctionEntry(Decoration precision, Id returnType, const 
 
     functions.push_back(std::unique_ptr<Function>(function));
 
-    // Create and push first debug lexical block
-    if (emitNonSemanticShaderDebugInfo) {
-      Id lexId = makeDebugLexicalBlock();
-      currentScopeId.push(lexId);
-    }
-
     return function;
 }
 
@@ -1830,7 +1809,7 @@ Id Builder::makeDebugFunction(Function* function, Id nameId, Id funcTypeId) {
     type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugFunction);
     type->addIdOperand(nameId);
     type->addIdOperand(debugId[funcTypeId]);
-    type->addIdOperand(makeDebugSource(currentFileId)); // Will be fixed later when true filename available
+    type->addIdOperand(makeDebugSource(sourceFileStringId)); // Will be fixed later when true filename available
     type->addIdOperand(makeUintConstant(currentLine)); // Will be fixed later when true line available
     type->addIdOperand(makeUintConstant(0)); // column
     type->addIdOperand(makeDebugCompilationUnit()); // scope
@@ -1839,22 +1818,7 @@ Id Builder::makeDebugFunction(Function* function, Id nameId, Id funcTypeId) {
     type->addIdOperand(makeUintConstant(currentLine)); // TODO(greg-lunarg): correct scope line
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
     module.mapInstruction(type);
-    currentScopeId.push(funcId);
     return funcId;
-}
-
-Id Builder::makeDebugLexicalBlock() {
-  Id lexId = getUniqueId();
-  auto lex = new Instruction(lexId, makeVoidType(), OpExtInst);
-  lex->addIdOperand(nonSemanticShaderDebugInfo);
-  lex->addImmediateOperand(NonSemanticShaderDebugInfo100DebugLexicalBlock);
-  lex->addIdOperand(makeDebugSource(currentFileId)); // Will be fixed later when true filename available
-  lex->addIdOperand(makeUintConstant(currentLine)); // Will be fixed later when true line available
-  lex->addIdOperand(makeUintConstant(0)); // column
-  lex->addIdOperand(currentScopeId.top()); // scope
-  constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(lex));
-  module.mapInstruction(lex);
-  return lexId;
 }
 
 // Comments in header
@@ -1885,10 +1849,6 @@ void Builder::leaveFunction()
         else {
             makeReturn(true, createUndefined(function.getReturnType()));
         }
-    }
-    if (emitNonSemanticShaderDebugInfo) {
-        (void)currentScopeId.pop(); // Outermost lexical block
-        (void)currentScopeId.pop(); // Function
     }
 }
 
