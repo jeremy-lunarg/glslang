@@ -400,6 +400,9 @@ public:
     // code.  In the case of an implicit return, no post-return block is inserted.
     void makeReturn(bool implicit, Id retVal = 0);
 
+    // Prepare builder for generation of instructions for a function.
+    void enterFunction();
+
     // Generate all the code needed to finish up a function.
     void leaveFunction();
 

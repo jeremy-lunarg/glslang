@@ -5137,6 +5137,7 @@ void TGlslangToSpvTraverser::handleFunctionEntry(const glslang::TIntermAggregate
     // that called makeFunctions().
     currentFunction = functionMap[node->getName().c_str()];
     spv::Block* functionBlock = currentFunction->getEntryBlock();
+    builder.enterFunction();
     builder.setBuildPoint(functionBlock);
 }
 

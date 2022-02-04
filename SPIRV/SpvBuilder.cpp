@@ -1836,6 +1836,11 @@ void Builder::makeReturn(bool implicit, Id retVal)
 }
 
 // Comments in header
+void Builder::enterFunction()
+{
+}
+
+// Comments in header
 void Builder::leaveFunction()
 {
     Block* block = buildPoint;
