@@ -5022,6 +5022,7 @@ void TGlslangToSpvTraverser::makeFunctions(const glslang::TIntermSequence& glslF
         //   GLSL has copy-in/copy-out semantics.  They can be handled though with a pointer to a copy.
 
         std::vector<spv::Id> paramTypes;
+        std::vector<char const*> paramNames;
         std::vector<std::vector<spv::Decoration>> paramDecorations; // list of decorations per parameter
         glslang::TIntermSequence& parameters = glslFunction->getSequence()[0]->getAsAggregate()->getSequence();
 
@@ -5046,10 +5047,14 @@ void TGlslangToSpvTraverser::makeFunctions(const glslang::TIntermSequence& glslF
             paramTypes.push_back(typeId);
         }
 
+        for (auto const parameter:parameters) {
+            paramNames.push_back(parameter->getAsSymbolNode()->getName().c_str());
+        }
+
         spv::Block* functionBlock;
         spv::Function *function = builder.makeFunctionEntry(TranslatePrecisionDecoration(glslFunction->getType()),
                                                             convertGlslangToSpvType(glslFunction->getType()),
-                                                            glslFunction->getName().c_str(), paramTypes,
+                                                            glslFunction->getName().c_str(), paramTypes, paramNames,
                                                             paramDecorations, &functionBlock);
         if (implicitThis)
             function->setImplicitThis();

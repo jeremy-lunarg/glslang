@@ -1751,7 +1751,8 @@ Function* Builder::makeEntryPoint(const char* entryPoint)
     assert(! entryPointFunction);
 
     Block* entry;
-    std::vector<Id> params;
+    std::vector<Id> paramsTypes;
+    std::vector<char const*> paramNames;
     std::vector<std::vector<Decoration>> decorations;
 
     restoreNonSemanticShaderDebugInfo = emitNonSemanticShaderDebugInfo;
@@ -1759,7 +1760,7 @@ Function* Builder::makeEntryPoint(const char* entryPoint)
         emitNonSemanticShaderDebugInfo = false;
     }
 
-    entryPointFunction = makeFunctionEntry(NoPrecision, makeVoidType(), entryPoint, params, decorations, &entry);
+    entryPointFunction = makeFunctionEntry(NoPrecision, makeVoidType(), entryPoint, paramsTypes, paramNames, decorations, &entry);
 
     emitNonSemanticShaderDebugInfo = restoreNonSemanticShaderDebugInfo;
 
@@ -1768,7 +1769,7 @@ Function* Builder::makeEntryPoint(const char* entryPoint)
 
 // Comments in header
 Function* Builder::makeFunctionEntry(Decoration precision, Id returnType, const char* name,
-                                     const std::vector<Id>& paramTypes,
+                                     const std::vector<Id>& paramTypes, const std::vector<char const*>& paramNames,
                                      const std::vector<std::vector<Decoration>>& decorations, Block **entry)
 {
     // Make the function and initial instructions in it
@@ -1799,6 +1800,21 @@ Function* Builder::makeFunctionEntry(Decoration precision, Id returnType, const 
         *entry = new Block(getUniqueId(), *function);
         function->addBlock(*entry);
         setBuildPoint(*entry);
+    }
+
+    if (emitNonSemanticShaderDebugInfo) {
+        assert(paramTypes.size() == paramNames.size());
+        for(size_t p = 0; p < paramTypes.size(); ++p)
+        {
+            auto const& paramType = paramTypes[p];
+            assert(isPointerType(paramType));
+            assert(debugId[getContainedTypeId(paramType)] != 0);
+            auto const& paramName = paramNames[p];
+            // TODO: Generate optional argNumber.
+            auto const debugResultId = createDebugLocalVariable(debugId[getContainedTypeId(paramType)], paramName);
+            debugId[firstParamId + p] = debugResultId;
+        }
+        // TODO: Generate DebugDeclare(s).
     }
 
     if (name)
