@@ -919,7 +919,7 @@ Id Builder::createDebugGlobalVariable(Id const type, char const*const name, Id c
     return inst->getResultId();
 }
 
-Id Builder::createDebugLocalVariable(Id type, char const*const name)
+Id Builder::createDebugLocalVariable(Id type, char const*const name, size_t const argNumber)
 {
     Instruction* inst = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
     inst->addIdOperand(nonSemanticShaderDebugInfo);
@@ -931,7 +931,9 @@ Id Builder::createDebugLocalVariable(Id type, char const*const name)
     inst->addIdOperand(makeUintConstant(0)); // TODO: column id
     inst->addIdOperand(getStringId("TODO")); // TODO: scope id
     inst->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100FlagIsLocal)); // flags id
-    inst->addIdOperand(getStringId("TODO")); // TODO: ArgNumber id; optional one-based index if formal parameter 
+    if(argNumber != 0) {
+        inst->addIdOperand(makeUintConstant(argNumber));
+    }
 
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(inst));
     module.mapInstruction(inst);
@@ -1832,7 +1834,7 @@ Function* Builder::makeFunctionEntry(Decoration precision, Id returnType, const 
             assert(debugId[getContainedTypeId(paramType)] != 0);
             auto const& paramName = paramNames[p];
             // TODO: Generate optional argNumber.
-            auto const debugResultId = createDebugLocalVariable(debugId[getContainedTypeId(paramType)], paramName);
+            auto const debugResultId = createDebugLocalVariable(debugId[getContainedTypeId(paramType)], paramName, p+1);
             debugId[firstParamId + p] = debugResultId;
         }
         // TODO: Generate DebugDeclare(s).

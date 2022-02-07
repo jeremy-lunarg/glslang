@@ -221,7 +221,7 @@ public:
     Id makeDebugSource(const Id fileName);
     Id makeDebugCompilationUnit();
     Id createDebugGlobalVariable(Id const type, char const*const name, Id const variable);
-    Id createDebugLocalVariable(Id type, char const*const name);
+    Id createDebugLocalVariable(Id type, char const*const name, size_t const argNumber = 0);
     Id makeDebugFunctionType(Id returnType, const std::vector<Id>& paramTypes);
     Id makeDebugFunction(Function* function, Id nameId, Id funcTypeId);
     Id makeDebugLexicalBlock();
