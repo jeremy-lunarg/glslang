@@ -840,7 +840,7 @@ Id Builder::makeCompositeDebugType(std::vector<Id> const& memberTypes, char cons
     type->addIdOperand(makeDebugSource(sourceFileStringId)); // source id TODO: verify this works across include directives
     type->addIdOperand(makeUintConstant(currentLine)); // line id TODO: currentLine always zero?
     type->addIdOperand(makeUintConstant(0)); // TODO: column id
-    type->addIdOperand(getStringId("TODO")); // TODO: scope id
+    type->addIdOperand(makeDebugCompilationUnit()); // scope id
     type->addIdOperand(getStringId("TODO")); // TODO: linkage name id
     type->addIdOperand(makeUintConstant(0)); // TODO: size id
     type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100FlagIsPublic)); // flags id
