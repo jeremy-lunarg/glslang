@@ -211,8 +211,7 @@ Id Builder::makeSamplerType()
 
     if (emitNonSemanticShaderDebugInfo)
     {
-        // TODO: Build a unique string for the name prepended with "@".
-        auto const debugResultId = makeCompositeDebugType({}, "@TODO_sampler", NonSemanticShaderDebugInfo100Structure);
+        auto const debugResultId = makeCompositeDebugType({}, "type.sampler", NonSemanticShaderDebugInfo100Structure, true);
         debugId[type->getResultId()] = debugResultId;
     }
 
@@ -697,8 +696,17 @@ Id Builder::makeImageType(Id sampledType, Dim dim, bool depth, bool arrayed, boo
 
     if (emitNonSemanticShaderDebugInfo)
     {
-        // TODO: Build a unique string for the name prepended with "@".
-        auto const debugResultId = makeCompositeDebugType({}, "@TODO_image", NonSemanticShaderDebugInfo100Class);
+        auto TypeName = [&dim]() -> char const* {
+            switch (dim) {
+                case Dim1D: return "type.1d.image";
+                case Dim2D: return "type.2d.image";
+                case Dim3D: return "type.3d.image";
+                case DimCube: return "type.cube.image";
+                default: return "type.image";
+            }
+        };
+
+        auto const debugResultId = makeCompositeDebugType({}, TypeName(), NonSemanticShaderDebugInfo100Class, true);
         debugId[type->getResultId()] = debugResultId;
     }
 
@@ -818,7 +826,7 @@ Id Builder::makeMemberDebugType(Id const memberType, DebugTypeLoc const& debugTy
 // Note: To represent a source language opaque type, this instruction must have no Members operands, Size operand must be
 // DebugInfoNone, and Name must start with @ to avoid clashes with user defined names.
 Id Builder::makeCompositeDebugType(std::vector<Id> const& memberTypes, char const*const name,
-    NonSemanticShaderDebugInfo100DebugCompositeType const tag)
+    NonSemanticShaderDebugInfo100DebugCompositeType const tag, bool const isOpaqueType)
 {
     // Create the debug member types.
     std::vector<Id> memberDebugTypes;
@@ -840,7 +848,12 @@ Id Builder::makeCompositeDebugType(std::vector<Id> const& memberTypes, char cons
     type->addIdOperand(makeUintConstant(currentLine)); // line id TODO: currentLine always zero?
     type->addIdOperand(makeUintConstant(0)); // TODO: column id
     type->addIdOperand(makeDebugCompilationUnit()); // scope id
-    type->addIdOperand(getStringId("TODO")); // TODO: linkage name id
+    if(isOpaqueType == true) {
+        // Prepend '@' to opaque types.
+        type->addIdOperand(getStringId('@' + std::string(name))); // linkage name id
+    } else {
+        type->addIdOperand(getStringId(name)); // linkage name id
+    }
     type->addIdOperand(makeUintConstant(0)); // TODO: size id
     type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100FlagIsPublic)); // flags id
     for(auto const memberDebugType : memberDebugTypes) {
