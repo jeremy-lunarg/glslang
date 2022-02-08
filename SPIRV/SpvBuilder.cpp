@@ -928,7 +928,7 @@ Id Builder::createDebugLocalVariable(Id type, char const*const name, size_t cons
     inst->addIdOperand(makeDebugSource(sourceFileStringId)); // source id
     inst->addIdOperand(makeUintConstant(currentLine)); // line id
     inst->addIdOperand(makeUintConstant(0)); // TODO: column id
-    inst->addIdOperand(getStringId("TODO")); // TODO: scope id
+    inst->addIdOperand(currentDebugScopeId.top()); // scope id
     inst->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100FlagIsLocal)); // flags id
     if(argNumber != 0) {
         inst->addIdOperand(makeUintConstant(argNumber));
