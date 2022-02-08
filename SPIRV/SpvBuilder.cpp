@@ -941,6 +941,36 @@ Id Builder::createDebugLocalVariable(Id type, char const*const name, size_t cons
     return inst->getResultId();
 }
 
+Id Builder::makeDebugExpression()
+{
+    if (debugExpression != 0)
+        return debugExpression;
+
+    Instruction* inst = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
+    inst->addIdOperand(nonSemanticShaderDebugInfo);
+    inst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugExpression);
+
+    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(inst));
+    module.mapInstruction(inst);
+
+    debugExpression = inst->getResultId();
+
+    return debugExpression;
+}
+
+Id Builder::makeDebugDeclare(Id const debugLocalVariable, Id const localVariable)
+{
+    Instruction* inst = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
+    inst->addIdOperand(nonSemanticShaderDebugInfo);
+    inst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugDeclare);
+    inst->addIdOperand(debugLocalVariable); // debug local variable id
+    inst->addIdOperand(localVariable); // local variable id
+    inst->addIdOperand(makeDebugExpression()); // expression id
+    buildPoint->addInstruction(std::unique_ptr<Instruction>(inst));
+
+    return inst->getResultId();
+}
+
 #ifndef GLSLANG_WEB
 Id Builder::makeAccelerationStructureType()
 {
@@ -1833,11 +1863,11 @@ Function* Builder::makeFunctionEntry(Decoration precision, Id returnType, const 
             assert(isPointerType(paramType));
             assert(debugId[getContainedTypeId(paramType)] != 0);
             auto const& paramName = paramNames[p];
-            // TODO: Generate optional argNumber.
-            auto const debugResultId = createDebugLocalVariable(debugId[getContainedTypeId(paramType)], paramName, p+1);
-            debugId[firstParamId + p] = debugResultId;
+            auto const debugLocalVariableId = createDebugLocalVariable(debugId[getContainedTypeId(paramType)], paramName, p+1);
+            debugId[firstParamId + p] = debugLocalVariableId;
+
+            makeDebugDeclare(debugLocalVariableId, firstParamId + p);
         }
-        // TODO: Generate DebugDeclare(s).
     }
 
     if (name)
@@ -1966,8 +1996,10 @@ Id Builder::createVariable(Decoration precision, StorageClass storageClass, Id t
 
         if (emitNonSemanticShaderDebugInfo)
         {
-            auto const debugResultId = createDebugLocalVariable(debugId[type], name);
-            debugId[inst->getResultId()] = debugResultId;
+            auto const debugLocalVariableId = createDebugLocalVariable(debugId[type], name);
+            debugId[inst->getResultId()] = debugLocalVariableId;
+
+            makeDebugDeclare(debugLocalVariableId, inst->getResultId());
         }
 
         break;

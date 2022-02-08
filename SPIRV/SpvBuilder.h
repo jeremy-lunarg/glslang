@@ -222,6 +222,8 @@ public:
     Id makeDebugCompilationUnit();
     Id createDebugGlobalVariable(Id const type, char const*const name, Id const variable);
     Id createDebugLocalVariable(Id type, char const*const name, size_t const argNumber = 0);
+    Id makeDebugExpression();
+    Id makeDebugDeclare(Id const debugLocalVariable, Id const localVariable);
     Id makeDebugFunctionType(Id returnType, const std::vector<Id>& paramTypes);
     Id makeDebugFunction(Function* function, Id nameId, Id funcTypeId);
     Id makeDebugLexicalBlock();
@@ -856,6 +858,7 @@ public:
     spv::Id nonSemanticShaderCompilationUnitId {0};
     spv::Id nonSemanticShaderDebugInfo {0};
     spv::Id debugInfoNone {0};
+    spv::Id debugExpression {0}; // Debug expression with zero operations.
     std::string sourceText;
     int currentLine;
     const char* currentFile;
