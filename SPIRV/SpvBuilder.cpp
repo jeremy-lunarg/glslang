@@ -907,10 +907,9 @@ Id Builder::createDebugGlobalVariable(Id const type, char const*const name, Id c
     inst->addIdOperand(makeUintConstant(currentLine)); // line id TODO: currentLine always zero?
     inst->addIdOperand(makeUintConstant(0)); // TODO: column id
     inst->addIdOperand(makeDebugCompilationUnit()); // scope id
-    inst->addIdOperand(makeDebugInfoNone()); // TODO: linkage name id
+    inst->addIdOperand(getStringId(name)); // linkage name id
     inst->addIdOperand(variable); // variable id
     inst->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100FlagIsDefinition)); // flags id
-    inst->addIdOperand(getStringId("TODO")); // TODO: ArgNumber id; optional one-based index if formal parameter 
 
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(inst));
     module.mapInstruction(inst);
