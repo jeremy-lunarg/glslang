@@ -732,7 +732,6 @@ Id Builder::makeDebugInfoNone()
         return debugInfoNone;
 
     Instruction* inst = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
-    inst = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
     inst->addIdOperand(nonSemanticShaderDebugInfo);
     inst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugInfoNone);
 
