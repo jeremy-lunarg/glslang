@@ -851,11 +851,13 @@ Id Builder::makeCompositeDebugType(std::vector<Id> const& memberTypes, char cons
     if(isOpaqueType == true) {
         // Prepend '@' to opaque types.
         type->addIdOperand(getStringId('@' + std::string(name))); // linkage name id
+        type->addIdOperand(makeDebugInfoNone()); // size id
     } else {
         type->addIdOperand(getStringId(name)); // linkage name id
+        type->addIdOperand(makeUintConstant(0)); // TODO: size id
     }
-    type->addIdOperand(makeUintConstant(0)); // TODO: size id
     type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100FlagIsPublic)); // flags id
+    assert(isOpaqueType == false || (isOpaqueType == true && memberDebugTypes.empty()));
     for(auto const memberDebugType : memberDebugTypes) {
         type->addIdOperand(memberDebugType);
     }
