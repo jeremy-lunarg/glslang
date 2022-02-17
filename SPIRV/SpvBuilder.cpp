@@ -311,6 +311,12 @@ Id Builder::makeIntegerType(int width, bool hasSign)
         break;
     }
 
+    if (emitNonSemanticShaderDebugInfo)
+    {
+        auto const debugResultId = makeIntegerDebugType(width, hasSign);
+        debugId[type->getResultId()] = debugResultId;
+    }
+
     return type->getResultId();
 }
 
@@ -749,6 +755,42 @@ Id Builder::makeDebugInfoNone()
     debugInfoNone = inst->getResultId();
 
     return debugInfoNone;
+}
+
+Id Builder::makeIntegerDebugType(int const width, bool const hasSign)
+{
+    // try to find it
+    Instruction* type;
+    for (int t = 0; t < (int)groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeBasic].size(); ++t) {
+        type = groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeBasic][t];
+        if (type->getIdOperand(0) == (hasSign ? getStringId("int") : getStringId("uint")) &&
+            type->getIdOperand(1) == static_cast<unsigned int>(width) &&
+            type->getIdOperand(2) == (hasSign ? NonSemanticShaderDebugInfo100Signed : NonSemanticShaderDebugInfo100Unsigned))
+            return type->getResultId();
+    }
+
+    // not found, make it
+    type = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
+    type->addIdOperand(nonSemanticShaderDebugInfo);
+    type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeBasic);
+    if(hasSign == true) {
+        type->addIdOperand(getStringId("int")); // name id
+    } else {
+        type->addIdOperand(getStringId("uint")); // name id
+    }
+    type->addIdOperand(makeUintConstant(width)); // size id
+    if(hasSign == true) {
+        type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100Signed)); // encoding id
+    } else {
+        type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100Unsigned)); // encoding id
+    }
+    type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100None)); // flags id
+
+    groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeBasic].push_back(type);
+    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
+    module.mapInstruction(type);
+
+    return type->getResultId();
 }
 
 Id Builder::makeFloatDebugType()

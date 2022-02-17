@@ -213,6 +213,7 @@ public:
     };
     std::unordered_map<Id, DebugTypeLoc> debugTypeLocs;
     Id makeDebugInfoNone();
+    Id makeIntegerDebugType(int const width, bool const hasSign);
     Id makeFloatDebugType();
     Id makeVectorDebugType(Id const baseType, int const componentCount);
     Id makeMemberDebugType(Id const memberType, DebugTypeLoc const& debugTypeLoc);
