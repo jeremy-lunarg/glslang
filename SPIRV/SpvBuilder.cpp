@@ -878,7 +878,8 @@ Id Builder::makeCompositeDebugType(std::vector<Id> const& memberTypes, char cons
 
         memberDebugTypes.emplace_back(makeMemberDebugType(memberType, debugTypeLocs[memberType]));
 
-        debugTypeLocs.erase(memberType);
+        // TODO: Need to rethink this method of passing location information.
+        // debugTypeLocs.erase(memberType);
     }
 
     // Create The structure debug type.
