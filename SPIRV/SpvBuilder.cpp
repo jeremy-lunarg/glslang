@@ -356,7 +356,7 @@ Id Builder::makeFloatType(int width)
 
     if (emitNonSemanticShaderDebugInfo)
     {
-        auto const debugResultId = makeFloatDebugType();
+        auto const debugResultId = makeFloatDebugType(width);
         debugId[type->getResultId()] = debugResultId;
     }
 
@@ -793,13 +793,14 @@ Id Builder::makeIntegerDebugType(int const width, bool const hasSign)
     return type->getResultId();
 }
 
-Id Builder::makeFloatDebugType()
+Id Builder::makeFloatDebugType(int const width)
 {
     // try to find it
     Instruction* type;
     for (int t = 0; t < (int)groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeBasic].size(); ++t) {
         type = groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeBasic][t];
-        if (type->getIdOperand(0) == getStringId("float"))
+        if (type->getIdOperand(0) == getStringId("float") &&
+            type->getIdOperand(1) == static_cast<unsigned int>(width))
             return type->getResultId();
     }
 
@@ -808,7 +809,7 @@ Id Builder::makeFloatDebugType()
     type->addIdOperand(nonSemanticShaderDebugInfo);
     type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeBasic);
     type->addIdOperand(getStringId("float")); // name id
-    type->addIdOperand(makeUintConstant(32)); // size id
+    type->addIdOperand(makeUintConstant(width)); // size id
     type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100Float)); // encoding id
     type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100None)); // flags id
 
