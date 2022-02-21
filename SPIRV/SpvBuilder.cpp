@@ -1996,12 +1996,21 @@ void Builder::enterFunction(Function const* function)
         emitNonSemanticShaderDebugInfo = false;
     }
 
-    // Create and push debug lexical block for outermost scope
     if (emitNonSemanticShaderDebugInfo) {
-        currentDebugScopeId.push(debugId[function->getFuncId()]);
+        // Create and push debug lexical block for outermost scope
+        Id funcId = function->getFuncId();
+        currentDebugScopeId.push(debugId[funcId]);
         Id lexId = makeDebugLexicalBlock();
         currentDebugScopeId.push(lexId);
         lastDebugScopeId = NoResult;
+        // Create DebugFunctionDefinition
+        spv::Id resultId = getUniqueId();
+        Instruction* defInst = new Instruction(resultId, makeVoidType(), OpExtInst);
+        defInst->addIdOperand(nonSemanticShaderDebugInfo);
+        defInst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugFunctionDefinition);
+        defInst->addIdOperand(debugId[funcId]);
+        defInst->addIdOperand(funcId);
+        buildPoint->addInstruction(std::unique_ptr<Instruction>(defInst));
     }
 }
 
