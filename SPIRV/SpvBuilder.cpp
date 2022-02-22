@@ -465,6 +465,12 @@ Id Builder::makeMatrixType(Id component, int cols, int rows)
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
     module.mapInstruction(type);
 
+    if (emitNonSemanticShaderDebugInfo)
+    {
+        auto const debugResultId = makeMatrixDebugType(column, cols);
+        debugId[type->getResultId()] = debugResultId;
+    }
+
     return type->getResultId();
 }
 
@@ -839,6 +845,32 @@ Id Builder::makeVectorDebugType(Id const baseType, int const componentCount)
     type->addIdOperand(makeUintConstant(componentCount)); // component count
 
     groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeVector].push_back(type);
+    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
+    module.mapInstruction(type);
+
+    return type->getResultId();
+}
+
+Id Builder::makeMatrixDebugType(Id const vectorType, int const vectorCount, bool columnMajor)
+{
+    // try to find it
+    Instruction* type;
+    for (int t = 0; t < (int)groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeMatrix].size(); ++t) {
+        type = groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeMatrix][t];
+        if (type->getIdOperand(0) == vectorType &&
+            type->getIdOperand(1) == makeUintConstant(vectorCount))
+            return type->getResultId();
+    }
+
+    // not found, make it
+    type = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
+    type->addIdOperand(nonSemanticShaderDebugInfo);
+    type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeMatrix);
+    type->addIdOperand(debugId[vectorType]); // vector type id
+    type->addIdOperand(makeUintConstant(vectorCount)); // component count id
+    type->addIdOperand(makeBoolConstant(columnMajor)); // column-major id
+
+    groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeMatrix].push_back(type);
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
     module.mapInstruction(type);
 
