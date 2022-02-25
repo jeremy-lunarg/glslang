@@ -231,7 +231,7 @@ public:
     Id makeDebugDeclare(Id const debugLocalVariable, Id const localVariable);
     Id makeDebugFunctionType(Id returnType, const std::vector<Id>& paramTypes);
     Id makeDebugFunction(Function* function, Id nameId, Id funcTypeId);
-    Id makeDebugLexicalBlock();
+    Id makeDebugLexicalBlock(uint32_t line);
 
     // accelerationStructureNV type
     Id makeAccelerationStructureType();
@@ -392,7 +392,11 @@ public:
     void addMemberDecoration(Id, unsigned int member, Decoration, const std::vector<const char*>& strings);
 
     // At the end of what block do the next create*() instructions go?
-    void setBuildPoint(Block* bp) { buildPoint = bp; }
+    // Also reset current last DebugScope to unknown
+    void setBuildPoint(Block* bp) {
+        buildPoint = bp;
+        lastDebugScopeId = NoResult;
+    }
     Block* getBuildPoint() const { return buildPoint; }
 
     // Make the entry-point function. The returned pointer is only valid
@@ -409,6 +413,12 @@ public:
     // Create a return. An 'implicit' return is one not appearing in the source
     // code.  In the case of an implicit return, no post-return block is inserted.
     void makeReturn(bool implicit, Id retVal = 0);
+
+    // Initialize state and generate instructions for new lexical scope
+    void enterScope(uint32_t line);
+
+    // Set state and generate instructions to exit current lexical scope
+    void leaveScope();
 
     // Prepare builder for generation of instructions for a function.
     void enterFunction(Function const* function);

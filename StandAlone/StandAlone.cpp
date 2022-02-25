@@ -1306,6 +1306,9 @@ void CompileAndLinkShaderUnits(std::vector<ShaderCompUnit> compUnits)
         if (HlslDxPositionW)
             shader->setDxPositionW(true);
 
+        if (emitNonSemanticShaderDebugInfo)
+            shader->setDebugInfo(true);
+
         // Set up the environment, some subsettings take precedence over earlier
         // ways of setting things.
         if (Options & EOptionSpv) {

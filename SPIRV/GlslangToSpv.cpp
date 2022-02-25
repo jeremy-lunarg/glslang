@@ -2460,6 +2460,14 @@ bool TGlslangToSpvTraverser::visitUnary(glslang::TVisit /* visit */, glslang::TI
         return false;
     }
 
+    // Force variable declaration - Debug Mode Only
+    if (node->getOp() == glslang::EOpDeclare) {
+        builder.clearAccessChain();
+        node->getOperand()->traverse(this);
+        builder.clearAccessChain();
+        return false;
+    }
+
     // Start by evaluating the operand
 
     // Does it need a swizzle inversion?  If so, evaluation is inverted;
@@ -2720,32 +2728,38 @@ bool TGlslangToSpvTraverser::visitAggregate(glslang::TVisit visit, glslang::TInt
     spv::Decoration precision = TranslatePrecisionDecoration(node->getOperationPrecision());
 
     switch (node->getOp()) {
+    case glslang::EOpScope:
     case glslang::EOpSequence:
     {
-        if (preVisit)
+        if (visit == glslang::EvPreVisit) {
             ++sequenceDepth;
-        else
+            if (sequenceDepth == 1) {
+                // If this is the parent node of all the functions, we want to see them
+                // early, so all call points have actual SPIR-V functions to reference.
+                // In all cases, still let the traverser visit the children for us.
+                makeFunctions(node->getAsAggregate()->getSequence());
+
+                // Also, we want all globals initializers to go into the beginning of the entry point, before
+                // anything else gets there, so visit out of order, doing them all now.
+                makeGlobalInitializers(node->getAsAggregate()->getSequence());
+
+                //Pre process linker objects for ray tracing stages
+                if (glslangIntermediate->isRayTracingStage())
+                  collectRayTracingLinkerObjects();
+
+                // Initializers are done, don't want to visit again, but functions and link objects need to be processed,
+                // so do them manually.
+                visitFunctions(node->getAsAggregate()->getSequence());
+
+                return false;
+            } else {
+                if (node->getOp() == glslang::EOpScope)
+                    builder.enterScope(0);
+            }
+        } else {
+            if (sequenceDepth > 1 && node->getOp() == glslang::EOpScope)
+                builder.leaveScope();
             --sequenceDepth;
-
-        if (sequenceDepth == 1) {
-            // If this is the parent node of all the functions, we want to see them
-            // early, so all call points have actual SPIR-V functions to reference.
-            // In all cases, still let the traverser visit the children for us.
-            makeFunctions(node->getAsAggregate()->getSequence());
-
-            // Also, we want all globals initializers to go into the beginning of the entry point, before
-            // anything else gets there, so visit out of order, doing them all now.
-            makeGlobalInitializers(node->getAsAggregate()->getSequence());
-
-            //Pre process linker objects for ray tracing stages
-            if (glslangIntermediate->isRayTracingStage())
-                collectRayTracingLinkerObjects();
-
-            // Initializers are done, don't want to visit again, but functions and link objects need to be processed,
-            // so do them manually.
-            visitFunctions(node->getAsAggregate()->getSequence());
-
-            return false;
         }
 
         return true;

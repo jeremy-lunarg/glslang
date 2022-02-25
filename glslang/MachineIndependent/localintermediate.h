@@ -291,6 +291,7 @@ public:
         numEntryPoints(0), numErrors(0), numPushConstants(0), recursive(false),
         invertY(false),
         dxPositionW(false),
+        debugInfo(false),
         useStorageBuffer(false),
         invariantAll(false),
         nanMinMaxClamp(false),
@@ -455,6 +456,12 @@ public:
     void setEntryPointMangledName(const char* ep) { entryPointMangledName = ep; }
     const std::string& getEntryPointName() const { return entryPointName; }
     const std::string& getEntryPointMangledName() const { return entryPointMangledName; }
+
+    void setDebugInfo(bool debuginfo)
+    {
+        debugInfo = debuginfo;
+    }
+    bool getDebugInfo() const { return debugInfo; }
 
     void setInvertY(bool invert)
     {
@@ -1083,6 +1090,7 @@ protected:
     bool recursive;
     bool invertY;
     bool dxPositionW;
+    bool debugInfo;
     bool useStorageBuffer;
     bool invariantAll;
     bool nanMinMaxClamp;            // true if desiring min/max/clamp to favor non-NaN over NaN

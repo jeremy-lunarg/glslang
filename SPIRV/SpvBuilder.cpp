@@ -2052,13 +2052,13 @@ Id Builder::makeDebugFunction(Function* function, Id nameId, Id funcTypeId) {
     return funcId;
 }
 
-Id Builder::makeDebugLexicalBlock() {
+Id Builder::makeDebugLexicalBlock(uint32_t line) {
     Id lexId = getUniqueId();
     auto lex = new Instruction(lexId, makeVoidType(), OpExtInst);
     lex->addIdOperand(nonSemanticShaderDebugInfo);
     lex->addImmediateOperand(NonSemanticShaderDebugInfo100DebugLexicalBlock);
-    lex->addIdOperand(makeDebugSource(currentFileId)); // Will be fixed later when true filename available
-    lex->addIdOperand(makeUintConstant(currentLine)); // Will be fixed later when true line available
+    lex->addIdOperand(makeDebugSource(currentFileId));
+    lex->addIdOperand(makeUintConstant(line));
     lex->addIdOperand(makeUintConstant(0)); // column
     lex->addIdOperand(currentDebugScopeId.top()); // scope
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(lex));
@@ -2081,6 +2081,23 @@ void Builder::makeReturn(bool implicit, Id retVal)
 }
 
 // Comments in header
+void Builder::enterScope(uint32_t line)
+{
+    // Generate new lexical scope debug instruction
+    Id lexId = makeDebugLexicalBlock(line);
+    currentDebugScopeId.push(lexId);
+    lastDebugScopeId = NoResult;
+}
+
+// Comments in header
+void Builder::leaveScope()
+{
+    // Pop current scope from stack and clear current scope
+    currentDebugScopeId.pop();
+    lastDebugScopeId = NoResult;
+}
+
+// Comments in header
 void Builder::enterFunction(Function const* function)
 {
     // Save and disable debugInfo for HLSL entry point function. It is a wrapper
@@ -2091,12 +2108,9 @@ void Builder::enterFunction(Function const* function)
     }
 
     if (emitNonSemanticShaderDebugInfo) {
-        // Create and push debug lexical block for outermost scope
+        // Initialize scope state
         Id funcId = function->getFuncId();
         currentDebugScopeId.push(debugId[funcId]);
-        Id lexId = makeDebugLexicalBlock();
-        currentDebugScopeId.push(lexId);
-        lastDebugScopeId = NoResult;
         // Create DebugFunctionDefinition
         spv::Id resultId = getUniqueId();
         Instruction* defInst = new Instruction(resultId, makeVoidType(), OpExtInst);
@@ -2124,11 +2138,9 @@ void Builder::leaveFunction()
         }
     }
 
-    // Clear debug scope stack
-    if (emitNonSemanticShaderDebugInfo) {
-        currentDebugScopeId.pop(); // Outermost lexical scope
-        currentDebugScopeId.pop(); // Function scope
-    }
+    // Clear function scope from debug scope stack
+    if (emitNonSemanticShaderDebugInfo)
+        currentDebugScopeId.pop(); 
 
     emitNonSemanticShaderDebugInfo = restoreNonSemanticShaderDebugInfo;
 }

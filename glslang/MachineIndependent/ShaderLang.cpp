@@ -1828,6 +1828,7 @@ void  TShader::setUniqueId(unsigned long long id)
     intermediate->setUniqueId(id);
 }
 
+void TShader::setDebugInfo(bool debugInfo)              { intermediate->setDebugInfo(debugInfo); }
 void TShader::setInvertY(bool invert)                   { intermediate->setInvertY(invert); }
 void TShader::setDxPositionW(bool invert)               { intermediate->setDxPositionW(invert); }
 void TShader::setNanMinMaxClamp(bool useNonNan)         { intermediate->setNanMinMaxClamp(useNonNan); }
