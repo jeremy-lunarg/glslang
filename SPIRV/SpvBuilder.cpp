@@ -557,6 +557,12 @@ Id Builder::makeArrayType(Id element, Id sizeId, int stride)
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
     module.mapInstruction(type);
 
+    if (emitNonSemanticShaderDebugInfo)
+    {
+        auto const debugResultId = makeArrayDebugType(element, sizeId);
+        debugId[type->getResultId()] = debugResultId;
+    }
+
     return type->getResultId();
 }
 
@@ -877,8 +883,36 @@ Id Builder::makeMatrixDebugType(Id const vectorType, int const vectorCount, bool
     return type->getResultId();
 }
 
+// TODO: DebugTypeVector and DebugTypeArray are very similar code. Templatize.
+Id Builder::makeArrayDebugType(Id const baseType, int const componentCount)
+{
+    // try to find it
+    Instruction* type;
+    for (int t = 0; t < (int)groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeArray].size(); ++t) {
+        type = groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeArray][t];
+        if (type->getIdOperand(0) == baseType &&
+            type->getIdOperand(1) == makeUintConstant(componentCount))
+            return type->getResultId();
+    }
+
+    // not found, make it
+    type = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
+    type->addIdOperand(nonSemanticShaderDebugInfo);
+    type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeArray);
+    type->addIdOperand(debugId[baseType]); // base type
+    type->addIdOperand(makeUintConstant(componentCount)); // component count
+
+    groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeArray].push_back(type);
+    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
+    module.mapInstruction(type);
+
+    return type->getResultId();
+}
+
 Id Builder::makeMemberDebugType(Id const memberType, DebugTypeLoc const& debugTypeLoc)
 {
+    assert(debugId[memberType] != 0);
+
     Instruction* type = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
     type->addIdOperand(nonSemanticShaderDebugInfo);
     type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeMember);
