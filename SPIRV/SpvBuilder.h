@@ -213,6 +213,7 @@ public:
     };
     std::unordered_map<Id, DebugTypeLoc> debugTypeLocs;
     Id makeDebugInfoNone();
+    Id makeBoolDebugType(int const size);
     Id makeIntegerDebugType(int const width, bool const hasSign);
     Id makeFloatDebugType(int const width);
     Id makeSequentialDebugType(Id const baseType, int const componentCount, NonSemanticShaderDebugInfo100Instructions sequenceType);

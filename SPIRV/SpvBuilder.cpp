@@ -195,6 +195,12 @@ Id Builder::makeBoolType()
     } else
         type = groupedTypes[OpTypeBool].back();
 
+    if (emitNonSemanticShaderDebugInfo)
+    {
+        auto const debugResultId = makeBoolDebugType(32);
+        debugId[type->getResultId()] = debugResultId;
+    }
+
     return type->getResultId();
 }
 
@@ -767,6 +773,34 @@ Id Builder::makeDebugInfoNone()
     debugInfoNone = inst->getResultId();
 
     return debugInfoNone;
+}
+
+Id Builder::makeBoolDebugType(int const size)
+{
+    // try to find it
+    Instruction* type;
+    for (int t = 0; t < (int)groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeBasic].size(); ++t) {
+        type = groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeBasic][t];
+        if (type->getIdOperand(0) == getStringId("bool") &&
+            type->getIdOperand(1) == static_cast<unsigned int>(size) &&
+            type->getIdOperand(2) == NonSemanticShaderDebugInfo100Boolean)
+            return type->getResultId();
+    }
+
+    type = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
+    type->addIdOperand(nonSemanticShaderDebugInfo);
+    type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeBasic);
+
+    type->addIdOperand(getStringId("bool")); // name id
+    type->addIdOperand(makeUintConstant(size)); // size id
+    type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100Boolean)); // encoding id
+    type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100None)); // flags id
+
+    groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeBasic].push_back(type);
+    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
+    module.mapInstruction(type);
+
+    return type->getResultId();
 }
 
 Id Builder::makeIntegerDebugType(int const width, bool const hasSign)
