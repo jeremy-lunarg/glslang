@@ -846,7 +846,8 @@ Id Builder::makeFloatDebugType(int const width)
     for (int t = 0; t < (int)groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeBasic].size(); ++t) {
         type = groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeBasic][t];
         if (type->getIdOperand(0) == getStringId("float") &&
-            type->getIdOperand(1) == static_cast<unsigned int>(width))
+            type->getIdOperand(1) == static_cast<unsigned int>(width) &&
+            type->getIdOperand(2) == NonSemanticShaderDebugInfo100Float)
             return type->getResultId();
     }
 
