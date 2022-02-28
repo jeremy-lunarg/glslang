@@ -832,12 +832,15 @@ Id Builder::makeFloatDebugType(int const width)
     return type->getResultId();
 }
 
-Id Builder::makeVectorDebugType(Id const baseType, int const componentCount)
+Id Builder::makeSequentialDebugType(Id const baseType, int const componentCount, NonSemanticShaderDebugInfo100Instructions sequenceType)
 {
+    assert(sequenceType == NonSemanticShaderDebugInfo100DebugTypeArray ||
+        sequenceType == NonSemanticShaderDebugInfo100DebugTypeVector);
+
     // try to find it
     Instruction* type;
-    for (int t = 0; t < (int)groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeVector].size(); ++t) {
-        type = groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeVector][t];
+    for (int t = 0; t < (int)groupedDebugTypes[sequenceType].size(); ++t) {
+        type = groupedDebugTypes[sequenceType][t];
         if (type->getIdOperand(0) == baseType &&
             type->getIdOperand(1) == makeUintConstant(componentCount))
             return type->getResultId();
@@ -846,15 +849,25 @@ Id Builder::makeVectorDebugType(Id const baseType, int const componentCount)
     // not found, make it
     type = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
     type->addIdOperand(nonSemanticShaderDebugInfo);
-    type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeVector);
+    type->addImmediateOperand(sequenceType);
     type->addIdOperand(debugId[baseType]); // base type
     type->addIdOperand(makeUintConstant(componentCount)); // component count
 
-    groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeVector].push_back(type);
+    groupedDebugTypes[sequenceType].push_back(type);
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
     module.mapInstruction(type);
 
     return type->getResultId();
+}
+
+Id Builder::makeArrayDebugType(Id const baseType, int const componentCount)
+{
+    return makeSequentialDebugType(baseType, componentCount, NonSemanticShaderDebugInfo100DebugTypeArray);
+}
+
+Id Builder::makeVectorDebugType(Id const baseType, int const componentCount)
+{
+    return makeSequentialDebugType(baseType, componentCount, NonSemanticShaderDebugInfo100DebugTypeVector);;
 }
 
 Id Builder::makeMatrixDebugType(Id const vectorType, int const vectorCount, bool columnMajor)
@@ -877,32 +890,6 @@ Id Builder::makeMatrixDebugType(Id const vectorType, int const vectorCount, bool
     type->addIdOperand(makeBoolConstant(columnMajor)); // column-major id
 
     groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeMatrix].push_back(type);
-    constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
-    module.mapInstruction(type);
-
-    return type->getResultId();
-}
-
-// TODO: DebugTypeVector and DebugTypeArray are very similar code. Templatize.
-Id Builder::makeArrayDebugType(Id const baseType, int const componentCount)
-{
-    // try to find it
-    Instruction* type;
-    for (int t = 0; t < (int)groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeArray].size(); ++t) {
-        type = groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeArray][t];
-        if (type->getIdOperand(0) == baseType &&
-            type->getIdOperand(1) == makeUintConstant(componentCount))
-            return type->getResultId();
-    }
-
-    // not found, make it
-    type = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
-    type->addIdOperand(nonSemanticShaderDebugInfo);
-    type->addImmediateOperand(NonSemanticShaderDebugInfo100DebugTypeArray);
-    type->addIdOperand(debugId[baseType]); // base type
-    type->addIdOperand(makeUintConstant(componentCount)); // component count
-
-    groupedDebugTypes[NonSemanticShaderDebugInfo100DebugTypeArray].push_back(type);
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
     module.mapInstruction(type);
 

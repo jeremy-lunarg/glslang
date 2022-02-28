@@ -215,9 +215,10 @@ public:
     Id makeDebugInfoNone();
     Id makeIntegerDebugType(int const width, bool const hasSign);
     Id makeFloatDebugType(int const width);
+    Id makeSequentialDebugType(Id const baseType, int const componentCount, NonSemanticShaderDebugInfo100Instructions sequenceType);
+    Id makeArrayDebugType(Id const baseType, int const componentCount);
     Id makeVectorDebugType(Id const baseType, int const componentCount);
     Id makeMatrixDebugType(Id const vectorType, int const vectorCount, bool columnMajor = true);
-    Id makeArrayDebugType(Id const baseType, int const componentCount);
     Id makeMemberDebugType(Id const memberType, DebugTypeLoc const& debugTypeLoc);
     Id makeCompositeDebugType(std::vector<Id> const& memberTypes, char const*const name,
         NonSemanticShaderDebugInfo100DebugCompositeType const tag, bool const isOpaqueType = false);
