@@ -579,6 +579,12 @@ Id Builder::makeRuntimeArray(Id element)
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
     module.mapInstruction(type);
 
+    if (emitNonSemanticShaderDebugInfo)
+    {
+        auto const debugResultId = makeArrayDebugType(element, 0);
+        debugId[type->getResultId()] = debugResultId;
+    }
+
     return type->getResultId();
 }
 
@@ -867,7 +873,7 @@ Id Builder::makeFloatDebugType(int const width)
     return type->getResultId();
 }
 
-Id Builder::makeSequentialDebugType(Id const baseType, int const componentCount, NonSemanticShaderDebugInfo100Instructions sequenceType)
+Id Builder::makeSequentialDebugType(Id const baseType, int const componentCount, NonSemanticShaderDebugInfo100Instructions const sequenceType)
 {
     assert(sequenceType == NonSemanticShaderDebugInfo100DebugTypeArray ||
         sequenceType == NonSemanticShaderDebugInfo100DebugTypeVector);
