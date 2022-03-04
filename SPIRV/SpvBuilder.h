@@ -392,10 +392,11 @@ public:
     void addMemberDecoration(Id, unsigned int member, Decoration, const std::vector<const char*>& strings);
 
     // At the end of what block do the next create*() instructions go?
-    // Also reset current last DebugScope to unknown
+    // Also reset current last DebugScope and current source line to unknown
     void setBuildPoint(Block* bp) {
         buildPoint = bp;
         lastDebugScopeId = NoResult;
+        currentLine = 0;
     }
     Block* getBuildPoint() const { return buildPoint; }
 
