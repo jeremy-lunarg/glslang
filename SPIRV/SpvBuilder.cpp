@@ -875,7 +875,7 @@ Id Builder::makeFloatDebugType(int const width)
     return type->getResultId();
 }
 
-Id Builder::makeSequentialDebugType(Id const baseType, int const componentCount, NonSemanticShaderDebugInfo100Instructions const sequenceType)
+Id Builder::makeSequentialDebugType(Id const baseType, Id const componentCount, NonSemanticShaderDebugInfo100Instructions const sequenceType)
 {
     assert(sequenceType == NonSemanticShaderDebugInfo100DebugTypeArray ||
         sequenceType == NonSemanticShaderDebugInfo100DebugTypeVector);
@@ -894,7 +894,7 @@ Id Builder::makeSequentialDebugType(Id const baseType, int const componentCount,
     type->addIdOperand(nonSemanticShaderDebugInfo);
     type->addImmediateOperand(sequenceType);
     type->addIdOperand(debugId[baseType]); // base type
-    type->addIdOperand(makeUintConstant(componentCount)); // component count
+    type->addIdOperand(componentCount); // component count
 
     groupedDebugTypes[sequenceType].push_back(type);
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
@@ -903,14 +903,14 @@ Id Builder::makeSequentialDebugType(Id const baseType, int const componentCount,
     return type->getResultId();
 }
 
-Id Builder::makeArrayDebugType(Id const baseType, int const componentCount)
+Id Builder::makeArrayDebugType(Id const baseType, Id const componentCount)
 {
     return makeSequentialDebugType(baseType, componentCount, NonSemanticShaderDebugInfo100DebugTypeArray);
 }
 
 Id Builder::makeVectorDebugType(Id const baseType, int const componentCount)
 {
-    return makeSequentialDebugType(baseType, componentCount, NonSemanticShaderDebugInfo100DebugTypeVector);;
+    return makeSequentialDebugType(baseType, makeUintConstant(componentCount), NonSemanticShaderDebugInfo100DebugTypeVector);;
 }
 
 Id Builder::makeMatrixDebugType(Id const vectorType, int const vectorCount, bool columnMajor)
