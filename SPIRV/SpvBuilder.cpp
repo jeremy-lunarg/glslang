@@ -637,7 +637,7 @@ Id Builder::makeDebugFunctionType(Id returnType, const std::vector<Id>& paramTyp
     type->addIdOperand(makeUintConstant(NonSemanticShaderDebugInfo100FlagIsPublic));
     type->addIdOperand(debugId[returnType]);
     for (auto const paramType : paramTypes) {
-        assert(isPointerType(paramType));
+        assert(isPointerType(paramType) || isArrayType(paramType));
         type->addIdOperand(debugId[getContainedTypeId(paramType)]);
     }
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
@@ -2015,7 +2015,7 @@ Function* Builder::makeFunctionEntry(Decoration precision, Id returnType, const 
         for(size_t p = 0; p < paramTypes.size(); ++p)
         {
             auto const& paramType = paramTypes[p];
-            assert(isPointerType(paramType));
+            assert(isPointerType(paramType) || isArrayType(paramType));
             assert(debugId[getContainedTypeId(paramType)] != 0);
             auto const& paramName = paramNames[p];
             auto const debugLocalVariableId = createDebugLocalVariable(debugId[getContainedTypeId(paramType)], paramName, p+1);
