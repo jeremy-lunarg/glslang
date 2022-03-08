@@ -581,7 +581,7 @@ Id Builder::makeRuntimeArray(Id element)
 
     if (emitNonSemanticShaderDebugInfo)
     {
-        auto const debugResultId = makeArrayDebugType(element, 0);
+        auto const debugResultId = makeArrayDebugType(element, makeUintConstant(0));
         debugId[type->getResultId()] = debugResultId;
     }
 
