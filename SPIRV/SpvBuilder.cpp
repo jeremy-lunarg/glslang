@@ -628,6 +628,8 @@ Id Builder::makeFunctionType(Id returnType, const std::vector<Id>& paramTypes)
 
 Id Builder::makeDebugFunctionType(Id returnType, const std::vector<Id>& paramTypes)
 {
+    assert(debugId[returnType] != 0);
+
     Id typeId = getUniqueId();
     auto type = new Instruction(typeId, makeVoidType(), OpExtInst);
     type->addIdOperand(nonSemanticShaderDebugInfo);
@@ -1953,12 +1955,14 @@ Function* Builder::makeEntryPoint(const char* entryPoint)
     std::vector<char const*> paramNames;
     std::vector<std::vector<Decoration>> decorations;
 
+    auto const returnType = makeVoidType();
+
     restoreNonSemanticShaderDebugInfo = emitNonSemanticShaderDebugInfo;
     if(sourceLang == spv::SourceLanguageHLSL) {
         emitNonSemanticShaderDebugInfo = false;
     }
 
-    entryPointFunction = makeFunctionEntry(NoPrecision, makeVoidType(), entryPoint, paramsTypes, paramNames, decorations, &entry);
+    entryPointFunction = makeFunctionEntry(NoPrecision, returnType, entryPoint, paramsTypes, paramNames, decorations, &entry);
 
     emitNonSemanticShaderDebugInfo = restoreNonSemanticShaderDebugInfo;
 
