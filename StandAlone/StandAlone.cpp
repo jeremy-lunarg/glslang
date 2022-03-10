@@ -1843,6 +1843,7 @@ void usage()
            "  -g          generate debug information\n"
            "  -g0         strip debug information\n"
            "  -gV         generate nonsemantic shader debug information\n"
+           "  -gVS        generate nonsemantic shader debug information with source\n"
            "  -h          print this usage message\n"
            "  -i          intermediate tree (glslang AST) is printed out\n"
            "  -l          link all input files together to form a single module\n"
