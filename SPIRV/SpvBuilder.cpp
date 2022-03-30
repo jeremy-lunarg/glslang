@@ -604,7 +604,20 @@ Id Builder::makeFunctionType(Id returnType, const std::vector<Id>& paramTypes)
             }
         }
         if (! mismatch)
+        {
+            // If compiling HLSL, glslang will create a wrapper function around the entrypoint. Accordingly, a void(void)
+            // function type is created for the wrapper function. However, nonsemantic shader debug information is disabled
+            // while creating the HLSL wrapper. Consequently, if we encounter another void(void) function, we need to create
+            // the associated debug function type if it hasn't been created yet.
+            if(debugId[type->getResultId()] == 0) {
+                assert(sourceLang == spv::SourceLanguageHLSL);
+                assert(getTypeClass(returnType) == OpTypeVoid && paramTypes.size() == 0);
+
+                Id debugTypeId = makeDebugFunctionType(returnType, {});
+                debugId[type->getResultId()] = debugTypeId;
+            }
             return type->getResultId();
+        }
     }
 
     // not found, make it
@@ -2038,6 +2051,11 @@ Function* Builder::makeFunctionEntry(Decoration precision, Id returnType, const 
 }
 
 Id Builder::makeDebugFunction(Function* function, Id nameId, Id funcTypeId) {
+    assert(function != nullptr);
+    assert(nameId != 0);
+    assert(funcTypeId != 0);
+    assert(debugId[funcTypeId] != 0);
+
     Id funcId = getUniqueId();
     auto type = new Instruction(funcId, makeVoidType(), OpExtInst);
     type->addIdOperand(nonSemanticShaderDebugInfo);
