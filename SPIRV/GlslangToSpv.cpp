@@ -3341,7 +3341,7 @@ bool TGlslangToSpvTraverser::visitAggregate(glslang::TVisit visit, glslang::TInt
                 complexLvalues.push_back(builder.getAccessChain());
                 temporaryLvalues.push_back(builder.createVariable(
                     spv::NoPrecision, spv::StorageClassFunction,
-                    builder.accessChainGetInferredType(), "swizzleTemp"));
+                    builder.accessChainGetInferredType(), "swizzleTemp", spv::NoResult, true));
                 operands.push_back(temporaryLvalues.back());
             } else {
                 operands.push_back(builder.accessChainGetLValue());
@@ -5941,7 +5941,7 @@ spv::Id TGlslangToSpvTraverser::handleUserFunctionCall(const glslang::TIntermAgg
         } else if (writableParam(qualifiers[a])) {
             // need space to hold the copy
             arg = builder.createVariable(function->getParamPrecision(a), spv::StorageClassFunction,
-                builder.getContainedTypeId(function->getParamType(a)), "param");
+                builder.getContainedTypeId(function->getParamType(a)), "param", spv::NoResult, true);
             if (qualifiers[a] == glslang::EvqIn || qualifiers[a] == glslang::EvqInOut) {
                 // need to copy the input into output space
                 builder.setAccessChain(lValues[lValueCount]);
@@ -5956,7 +5956,7 @@ spv::Id TGlslangToSpvTraverser::handleUserFunctionCall(const glslang::TIntermAgg
             if (function->getParamType(a) != builder.getTypeId(rValues[rValueCount]) ||
                 TranslatePrecisionDecoration(*argTypes[a]) != function->getParamPrecision(a))
             {
-                spv::Id argCopy = builder.createVariable(function->getParamPrecision(a), spv::StorageClassFunction, function->getParamType(a), "arg");
+                spv::Id argCopy = builder.createVariable(function->getParamPrecision(a), spv::StorageClassFunction, function->getParamType(a), "arg", spv::NoResult, true);
                 builder.clearAccessChain();
                 builder.setAccessChainLValue(argCopy);
                 multiTypeStore(*argTypes[a], rValues[rValueCount]);

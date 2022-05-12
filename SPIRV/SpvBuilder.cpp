@@ -1087,6 +1087,7 @@ Id Builder::createDebugGlobalVariable(Id const type, char const*const name, Id c
 
 Id Builder::createDebugLocalVariable(Id type, char const*const name, size_t const argNumber)
 {
+    assert(name != nullptr);
     Instruction* inst = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
     inst->addIdOperand(nonSemanticShaderDebugInfo);
     inst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugLocalVariable);
@@ -2175,7 +2176,8 @@ void Builder::makeStatementTerminator(spv::Op opcode, const char *name)
 }
 
 // Comments in header
-Id Builder::createVariable(Decoration precision, StorageClass storageClass, Id type, const char* name, Id initializer)
+Id Builder::createVariable(Decoration precision, StorageClass storageClass, Id type, const char* name, Id initializer,
+    bool const compilerGenerated)
 {
     Id pointerType = makePointer(storageClass, type);
     Instruction* inst = new Instruction(getUniqueId(), pointerType, OpVariable);
@@ -2188,7 +2190,7 @@ Id Builder::createVariable(Decoration precision, StorageClass storageClass, Id t
         // Validation rules require the declaration in the entry block
         buildPoint->getParent().addLocalVariable(std::unique_ptr<Instruction>(inst));
 
-        if (emitNonSemanticShaderDebugInfo)
+        if (emitNonSemanticShaderDebugInfo && !compilerGenerated)
         {
             auto const debugLocalVariableId = createDebugLocalVariable(debugId[type], name);
             debugId[inst->getResultId()] = debugLocalVariableId;
@@ -3593,11 +3595,11 @@ Id Builder::accessChainLoad(Decoration precision, Decoration l_nonUniform,
                     // and mark it as NonWritable so that downstream it can be detected as a lookup
                     // table
                     lValue = createVariable(NoPrecision, StorageClassFunction, getTypeId(accessChain.base),
-                        "indexable", accessChain.base);
+                        "indexable", accessChain.base, true);
                     addDecoration(lValue, DecorationNonWritable);
                 } else {
                     lValue = createVariable(NoPrecision, StorageClassFunction, getTypeId(accessChain.base),
-                        "indexable");
+                        "indexable", spv::NoResult, true);
                     // store into it
                     createStore(accessChain.base, lValue);
                 }

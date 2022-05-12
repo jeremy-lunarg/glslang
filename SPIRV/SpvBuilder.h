@@ -433,7 +433,7 @@ public:
 
     // Create a global or function local or IO variable.
     Id createVariable(Decoration precision, StorageClass, Id type, const char* name = nullptr,
-        Id initializer = NoResult);
+        Id initializer = NoResult, bool const compilerGenerated = false);
 
     // Create an intermediate with an undefined value.
     Id createUndefined(Id type);
