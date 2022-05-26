@@ -776,6 +776,12 @@ Id Builder::makeSampledImageType(Id imageType)
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(type));
     module.mapInstruction(type);
 
+    if (emitNonSemanticShaderDebugInfo)
+    {
+        auto const debugResultId = makeCompositeDebugType({}, "type.sampled.image", NonSemanticShaderDebugInfo100Class, true);
+        debugId[type->getResultId()] = debugResultId;
+    }
+
     return type->getResultId();
 }
 
@@ -1066,6 +1072,8 @@ Id Builder::makeDebugCompilationUnit() {
 
 Id Builder::createDebugGlobalVariable(Id const type, char const*const name, Id const variable)
 {
+    assert(type != 0);
+
     Instruction* inst = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
     inst->addIdOperand(nonSemanticShaderDebugInfo);
     inst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugGlobalVariable);
