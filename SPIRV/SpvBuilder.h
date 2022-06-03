@@ -432,8 +432,8 @@ public:
     void makeStatementTerminator(spv::Op opcode, const char *name);
 
     // Create a global or function local or IO variable.
-    Id createVariable(Decoration precision, StorageClass, Id type, const char* name = nullptr,
-        Id initializer = NoResult, bool const compilerGenerated = false);
+    Id createVariable(Decoration precision, StorageClass storageClass, Id type, const char* name = nullptr,
+        Id initializer = NoResult, bool const compilerGenerated = true);
 
     // Create an intermediate with an undefined value.
     Id createUndefined(Id type);

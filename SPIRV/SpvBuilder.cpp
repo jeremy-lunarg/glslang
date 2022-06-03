@@ -3603,11 +3603,11 @@ Id Builder::accessChainLoad(Decoration precision, Decoration l_nonUniform,
                     // and mark it as NonWritable so that downstream it can be detected as a lookup
                     // table
                     lValue = createVariable(NoPrecision, StorageClassFunction, getTypeId(accessChain.base),
-                        "indexable", accessChain.base, true);
+                        "indexable", accessChain.base);
                     addDecoration(lValue, DecorationNonWritable);
                 } else {
                     lValue = createVariable(NoPrecision, StorageClassFunction, getTypeId(accessChain.base),
-                        "indexable", spv::NoResult, true);
+                        "indexable");
                     // store into it
                     createStore(accessChain.base, lValue);
                 }
