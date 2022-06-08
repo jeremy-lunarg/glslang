@@ -4442,7 +4442,7 @@ spv::Id TGlslangToSpvTraverser::convertGlslangStructToSpvType(const glslang::TTy
     }
 
     // Make the SPIR-V type
-    spv::Id spvType = builder.makeStructType(spvMembers, type.getTypeName().c_str());
+    spv::Id spvType = builder.makeStructType(spvMembers, type.getTypeName().c_str(), false);
     if (! HasNonLayoutQualifiers(type, qualifier))
         structMap[explicitLayout][qualifier.layoutMatrix][glslangMembers] = spvType;
 

@@ -373,7 +373,7 @@ Id Builder::makeFloatType(int width)
 // See makeStructResultType() for non-decorated structs
 // needed as the result of some instructions, which does
 // check for duplicates.
-Id Builder::makeStructType(const std::vector<Id>& members, const char* name)
+Id Builder::makeStructType(const std::vector<Id>& members, const char* name, bool const compilerGenerated)
 {
     // Don't look for previous one, because in the general case,
     // structs can be duplicated except for decorations.
@@ -387,7 +387,7 @@ Id Builder::makeStructType(const std::vector<Id>& members, const char* name)
     module.mapInstruction(type);
     addName(type->getResultId(), name);
 
-    if (emitNonSemanticShaderDebugInfo)
+    if (emitNonSemanticShaderDebugInfo && !compilerGenerated)
     {
         auto const debugResultId = makeCompositeDebugType(members, name, NonSemanticShaderDebugInfo100Structure);
         debugId[type->getResultId()] = debugResultId;
