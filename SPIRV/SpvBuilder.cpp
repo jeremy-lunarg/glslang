@@ -1433,6 +1433,17 @@ bool Builder::isSpecConstantOpCode(Op opcode) const
     }
 }
 
+bool Builder::isRayTracingOpCode(Op opcode) const
+{
+    switch (opcode) {
+    case OpTypeAccelerationStructureKHR:
+    case OpTypeRayQueryKHR:
+        return true;
+    default:
+        return false;
+    }
+}
+
 Id Builder::makeNullConstant(Id typeId)
 {
     Instruction* constant;
@@ -2212,7 +2223,7 @@ Id Builder::createVariable(Decoration precision, StorageClass storageClass, Id t
         constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(inst));
         module.mapInstruction(inst);
 
-        if (emitNonSemanticShaderDebugInfo)
+        if (emitNonSemanticShaderDebugInfo && !isRayTracingOpCode(getOpCode(type)))
         {
             auto const debugResultId = createDebugGlobalVariable(debugId[type], name, inst->getResultId());
             debugId[inst->getResultId()] = debugResultId;
