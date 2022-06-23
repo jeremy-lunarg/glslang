@@ -2219,7 +2219,7 @@ Id Builder::createVariable(Decoration precision, StorageClass storageClass, Id t
 
         break;
 
-    case StorageClassUniformConstant:
+    default:
         constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(inst));
         module.mapInstruction(inst);
 
@@ -2228,12 +2228,6 @@ Id Builder::createVariable(Decoration precision, StorageClass storageClass, Id t
             auto const debugResultId = createDebugGlobalVariable(debugId[type], name, inst->getResultId());
             debugId[inst->getResultId()] = debugResultId;
         }
-        break;
-
-    default:
-        constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(inst));
-        module.mapInstruction(inst);
-
         break;
     }
 
