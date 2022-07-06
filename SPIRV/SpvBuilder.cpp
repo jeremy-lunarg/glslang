@@ -1146,6 +1146,19 @@ Id Builder::makeDebugDeclare(Id const debugLocalVariable, Id const localVariable
     return inst->getResultId();
 }
 
+Id Builder::makeDebugValue(Id const debugLocalVariable, Id const value)
+{
+    Instruction* inst = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
+    inst->addIdOperand(nonSemanticShaderDebugInfo);
+    inst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugValue);
+    inst->addIdOperand(debugLocalVariable); // debug local variable id
+    inst->addIdOperand(value); // value id
+    inst->addIdOperand(makeDebugExpression()); // expression id
+    buildPoint->addInstruction(std::unique_ptr<Instruction>(inst));
+
+    return inst->getResultId();
+}
+
 #ifndef GLSLANG_WEB
 Id Builder::makeAccelerationStructureType()
 {
@@ -2214,7 +2227,8 @@ Id Builder::createVariable(Decoration precision, StorageClass storageClass, Id t
             auto const debugLocalVariableId = createDebugLocalVariable(debugId[type], name);
             debugId[inst->getResultId()] = debugLocalVariableId;
 
-            makeDebugDeclare(debugLocalVariableId, inst->getResultId());
+            // TODO: Remove?
+            // makeDebugDeclare(debugLocalVariableId, inst->getResultId());
         }
 
         break;
@@ -2287,6 +2301,15 @@ void Builder::createStore(Id rValue, Id lValue, spv::MemoryAccessMask memoryAcce
     }
 
     buildPoint->addInstruction(std::unique_ptr<Instruction>(store));
+
+    if (emitNonSemanticShaderDebugInfo && !isGlobalVariable(lValue))
+    {
+        if(debugId.find(lValue) != debugId.end())
+        {
+            auto const debugLocalVariableId = debugId[lValue];
+            makeDebugValue(debugLocalVariableId, rValue);
+        }
+    }
 }
 
 // Comments in header
