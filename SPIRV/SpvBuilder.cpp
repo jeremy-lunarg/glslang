@@ -2038,7 +2038,7 @@ Function* Builder::makeFunctionEntry(Decoration precision, Id returnType, const 
 
     // Make the debug function instruction
     if (emitNonSemanticShaderDebugInfo) {
-        Id nameId = getStringId(name);
+        Id nameId = getStringId(unmangleFunctionName(name));
         Id debugFuncId = makeDebugFunction(function, nameId, typeId);
         debugId[funcId] = debugFuncId;
         currentDebugScopeId.push(debugFuncId);
@@ -2119,6 +2119,17 @@ Id Builder::makeDebugLexicalBlock(uint32_t line) {
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(lex));
     module.mapInstruction(lex);
     return lexId;
+}
+
+std::string Builder::unmangleFunctionName(std::string const& name) const
+{
+    assert(name.length() > 0);
+
+    if(name.rfind('(') != std::string::npos) {
+        return name.substr(0, name.rfind('('));
+    } else {
+        return name;
+    }
 }
 
 // Comments in header
