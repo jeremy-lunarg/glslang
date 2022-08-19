@@ -1,0 +1,21 @@
+glsl.debuginfo.vert
+Shader version: 450
+0:? Sequence
+0:3  Function Definition: main( ( global void)
+0:3    Function Parameters: 
+0:?   Linker Objects
+0:?     'gl_VertexID' ( gl_VertexId int VertexId)
+0:?     'gl_InstanceID' ( gl_InstanceId int InstanceId)
+
+
+Linked vertex stage:
+
+
+Shader version: 450
+0:? Sequence
+0:3  Function Definition: main( ( global void)
+0:3    Function Parameters: 
+0:?   Linker Objects
+0:?     'gl_VertexID' ( gl_VertexId int VertexId)
+0:?     'gl_InstanceID' ( gl_InstanceId int InstanceId)
+
