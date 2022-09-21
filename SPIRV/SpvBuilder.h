@@ -64,6 +64,10 @@ namespace spv {
 #include <unordered_map>
 #include <map>
 
+#ifndef GIT_COMMIT_HASH
+#define GIT_COMMIT_HASH "GIT_COMMIT_HASH undefined"
+#endif
+
 namespace spv {
 
 typedef enum {
@@ -234,6 +238,7 @@ public:
     Id makeDebugFunctionType(Id returnType, const std::vector<Id>& paramTypes);
     Id makeDebugFunction(Function* function, Id nameId, Id funcTypeId);
     Id makeDebugLexicalBlock(uint32_t line);
+    Id makeDebugEntryPoint(Id const entryPoint, char const*const commandLineArguments);
     std::string unmangleFunctionName(std::string const& name) const;
 
     // accelerationStructureNV type
@@ -379,7 +384,7 @@ public:
     Id makeCompositeConstant(Id type, const std::vector<Id>& comps, bool specConst = false);
 
     // Methods for adding information outside the CFG.
-    Instruction* addEntryPoint(ExecutionModel, Function*, const char* name);
+    Instruction* addEntryPoint(ExecutionModel, Function*, char const*const name, char const*const commandLineArguments);
     void addExecutionMode(Function*, ExecutionMode mode, int value1 = -1, int value2 = -1, int value3 = -1);
     void addExecutionMode(Function*, ExecutionMode mode, const std::vector<unsigned>& literals);
     void addExecutionModeId(Function*, ExecutionMode mode, const std::vector<Id>& operandIds);

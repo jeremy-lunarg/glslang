@@ -144,6 +144,12 @@ target_link_libraries(MachineIndependent PRIVATE OGLCompiler OSDependent Generic
 ################################################################################
 # glslang
 ################################################################################
+execute_process(
+  COMMAND git rev-parse --short=8 HEAD
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_COMMIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 set(GLSLANG_SOURCES
     CInterface/glslang_c_interface.cpp)
 
@@ -176,6 +182,7 @@ target_link_libraries(glslang PRIVATE OGLCompiler OSDependent MachineIndependent
 target_include_directories(glslang PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+target_compile_definitions(glslang PRIVATE "-DGIT_COMMIT_HASH=\"${GIT_COMMIT_HASH}\"")
 
 glslang_add_build_info_dependency(glslang)
 

@@ -1390,8 +1390,10 @@ void CompileAndLinkShaderUnits(std::vector<ShaderCompUnit> compUnits)
         if (EnhancedMsgs)
             shader->setEnhancedMsgs();
 
-        if (emitNonSemanticShaderDebugInfo)
+        if (emitNonSemanticShaderDebugInfo) {
             shader->setDebugInfo(true);
+            shader->setDebugSource(emitNonSemanticShaderDebugSource);
+        }
 
         // Set up the environment, some subsettings take precedence over earlier
         // ways of setting things.
@@ -1486,14 +1488,9 @@ void CompileAndLinkShaderUnits(std::vector<ShaderCompUnit> compUnits)
                     glslang::SpvOptions spvOptions;
                     if (Options & EOptionDebug) {
                         spvOptions.generateDebugInfo = true;
-                        if (emitNonSemanticShaderDebugInfo) {
-                            spvOptions.emitNonSemanticShaderDebugInfo = true;
-                            if (emitNonSemanticShaderDebugSource) {
-                                spvOptions.emitNonSemanticShaderDebugSource = true;
-                            }
-                        }
-                    } else if (stripDebugInfo)
+                    } else if (stripDebugInfo) {
                         spvOptions.stripDebugInfo = true;
+                    }
                     spvOptions.disableOptimizer = (Options & EOptionOptimizeDisable) != 0;
                     spvOptions.optimizeSize = (Options & EOptionOptimizeSize) != 0;
                     spvOptions.disassemble = SpvToolsDisassembler;

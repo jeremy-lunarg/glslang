@@ -59,8 +59,6 @@ struct SpvOptions {
     bool optimizeSize {false};
     bool disassemble {false};
     bool validate {false};
-    bool emitNonSemanticShaderDebugInfo {false};
-    bool emitNonSemanticShaderDebugSource{ false };
 };
 
 #if ENABLE_OPT

@@ -212,6 +212,33 @@ private:
     std::vector<std::string> processes;
 };
 
+// This class is similar to TProcesses except that it is intended to be consumed by
+// the command-line arguments operand of DebugEntryPoint. Consequently, the formating
+// and contents are slightly different than TProcesses. Like TProcesses, it should be
+// inclusive enough to reproduce the steps used to transform the input source to the
+// output.
+class TCommandLineArguments
+{
+public:
+    TCommandLineArguments() {}
+    ~TCommandLineArguments() {}
+
+    void append(char const*const argument)
+    {
+        commandLineArguments += argument;
+    }
+
+    void append(std::string const& argument)
+    {
+        commandLineArguments += argument;
+    }
+
+    const std::string& getCommandLineArguments() const { return commandLineArguments; };
+
+private:
+    std::string commandLineArguments;
+};
+
 class TSymbolTable;
 class TSymbol;
 class TVariable;
@@ -291,6 +318,7 @@ public:
         dxPositionW(false),
         enhancedMsgs(false),
         debugInfo(false),
+        debugSource(false),
         useStorageBuffer(false),
         invariantAll(false),
         nanMinMaxClamp(false),
@@ -383,21 +411,27 @@ public:
             break;
         case EShTargetSpv_1_1:
             processes.addProcess("target-env spirv1.1");
+            commandLineArguments.append("--target-env spirv1.1");
             break;
         case EShTargetSpv_1_2:
             processes.addProcess("target-env spirv1.2");
+            commandLineArguments.append("--target-env spirv1.2");
             break;
         case EShTargetSpv_1_3:
             processes.addProcess("target-env spirv1.3");
+            commandLineArguments.append("--target-env spirv1.3");
             break;
         case EShTargetSpv_1_4:
             processes.addProcess("target-env spirv1.4");
+            commandLineArguments.append("--target-env spirv1.4");
             break;
         case EShTargetSpv_1_5:
             processes.addProcess("target-env spirv1.5");
+            commandLineArguments.append("--target-env spirv1.5");
             break;
         case EShTargetSpv_1_6:
             processes.addProcess("target-env spirv1.6");
+            commandLineArguments.append("--target-env spirv1.6");
             break;
         default:
             processes.addProcess("target-env spirvUnknown");
@@ -410,15 +444,19 @@ public:
             break;
         case EShTargetVulkan_1_0:
             processes.addProcess("target-env vulkan1.0");
+            commandLineArguments.append("--target-env vulkan1.0");
             break;
         case EShTargetVulkan_1_1:
             processes.addProcess("target-env vulkan1.1");
+            commandLineArguments.append("--target-env vulkan1.1");
             break;
         case EShTargetVulkan_1_2:
             processes.addProcess("target-env vulkan1.2");
+            commandLineArguments.append("--target-env vulkan1.2");
             break;
         case EShTargetVulkan_1_3:
             processes.addProcess("target-env vulkan1.3");
+            commandLineArguments.append("--target-env vulkan1.3");
             break;
         default:
             processes.addProcess("target-env vulkanUnknown");
@@ -452,30 +490,41 @@ public:
         entryPointName = ep;
         processes.addProcess("entry-point");
         processes.addArgument(entryPointName);
+        commandLineArguments.append("-e " + std::string(ep));
     }
     void setEntryPointMangledName(const char* ep) { entryPointMangledName = ep; }
     const std::string& getEntryPointName() const { return entryPointName; }
     const std::string& getEntryPointMangledName() const { return entryPointMangledName; }
 
-    void setDebugInfo(bool debuginfo)
+    void setDebugInfo(bool const debugInfo)
     {
-        debugInfo = debuginfo;
+        this->debugInfo = debugInfo;
     }
     bool getDebugInfo() const { return debugInfo; }
+
+    void setDebugSource(bool const debugSource)
+    {
+        this->debugSource = debugSource;
+    }
+    bool getDebugSource() const { return debugSource; }
 
     void setInvertY(bool invert)
     {
         invertY = invert;
-        if (invertY)
+        if (invertY) {
             processes.addProcess("invert-y");
+            commandLineArguments.append("--invert-y");
+        }
     }
     bool getInvertY() const { return invertY; }
 
     void setDxPositionW(bool dxPosW)
     {
         dxPositionW = dxPosW;
-        if (dxPositionW)
+        if (dxPositionW) {
             processes.addProcess("dx-position-w");
+            commandLineArguments.append("--hlsl-dx-position-w");
+        }
     }
     bool getDxPositionW() const { return dxPositionW; }
 
@@ -660,7 +709,11 @@ public:
 
         const char* name = getResourceName(res);
         if (name != nullptr)
+        {
             processes.addIfNonZero(name, shift);
+            commandLineArguments.append("--" + std::string(name)
+                + " " + std::to_string(shift));
+        }
     }
 
     unsigned int getShiftBinding(TResourceType res) const { return shiftBinding[res]; }
@@ -677,6 +730,8 @@ public:
             processes.addProcess(name);
             processes.addArgument(shift);
             processes.addArgument(set);
+            commandLineArguments.append("--" + std::string(name)
+                + " " + std::to_string(shift) + " " + std::to_string(set));
         }
     }
 
@@ -692,23 +747,30 @@ public:
         resourceSetBinding = shift;
         if (shift.size() > 0) {
             processes.addProcess("resource-set-binding");
-            for (int s = 0; s < (int)shift.size(); ++s)
+            commandLineArguments.append("--resource-set-binding");
+            for (int s = 0; s < (int)shift.size(); ++s) {
                 processes.addArgument(shift[s]);
+                commandLineArguments.append(" " + shift[s]);
+            }
         }
     }
     const std::vector<std::string>& getResourceSetBinding() const { return resourceSetBinding; }
     void setAutoMapBindings(bool map)
     {
         autoMapBindings = map;
-        if (autoMapBindings)
+        if (autoMapBindings) {
             processes.addProcess("auto-map-bindings");
+            commandLineArguments.append("--auto-map-bindings");
+        }
     }
     bool getAutoMapBindings() const { return autoMapBindings; }
     void setAutoMapLocations(bool map)
     {
         autoMapLocations = map;
-        if (autoMapLocations)
+        if (autoMapLocations) {
             processes.addProcess("auto-map-locations");
+            commandLineArguments.append("--auto-map-locations");
+        }
     }
     bool getAutoMapLocations() const { return autoMapLocations; }
 
@@ -716,16 +778,20 @@ public:
     void setFlattenUniformArrays(bool flatten)
     {
         flattenUniformArrays = flatten;
-        if (flattenUniformArrays)
+        if (flattenUniformArrays) {
             processes.addProcess("flatten-uniform-arrays");
+            commandLineArguments.append("--flatten-uniform-arrays");
+        }
     }
     bool getFlattenUniformArrays() const { return flattenUniformArrays; }
 #endif
     void setNoStorageFormat(bool b)
     {
         useUnknownFormat = b;
-        if (useUnknownFormat)
+        if (useUnknownFormat) {
             processes.addProcess("no-storage-format");
+            commandLineArguments.append("--no-storage-format");
+        }
     }
     bool getNoStorageFormat() const { return useUnknownFormat; }
     void setUseVulkanMemoryModel()
@@ -945,15 +1011,19 @@ public:
     void setHlslOffsets()
     {
         hlslOffsets = true;
-        if (hlslOffsets)
+        if (hlslOffsets) {
             processes.addProcess("hlsl-offsets");
+            commandLineArguments.append("--hlsl-offsets");
+        }
     }
     bool usingHlslOffsets() const { return hlslOffsets; }
     void setHlslIoMapping(bool b)
     {
         hlslIoMapping = b;
-        if (hlslIoMapping)
+        if (hlslIoMapping) {
             processes.addProcess("hlsl-iomap");
+            commandLineArguments.append("--hlsl-iomap");
+        }
     }
     bool usingHlslIoMapping() { return hlslIoMapping; }
 #else
@@ -1026,6 +1096,7 @@ public:
     void addProcess(const std::string& process) { processes.addProcess(process); }
     void addProcessArgument(const std::string& arg) { processes.addArgument(arg); }
     const std::vector<std::string>& getProcesses() const { return processes.getProcesses(); }
+    const std::string& getCommandLineArguments() const { return commandLineArguments.getCommandLineArguments(); }
     unsigned long long getUniqueId() const { return uniqueId; }
     void setUniqueId(unsigned long long id) { uniqueId = id; }
 
@@ -1109,6 +1180,7 @@ protected:
     bool dxPositionW;
     bool enhancedMsgs;
     bool debugInfo;
+    bool debugSource;
     bool useStorageBuffer;
     bool invariantAll;
     bool nanMinMaxClamp;            // true if desiring min/max/clamp to favor non-NaN over NaN
@@ -1212,6 +1284,9 @@ protected:
 
     // for OpModuleProcessed, or equivalent
     TProcesses processes;
+
+    // Store the command-line arguments that will be embedded in DebugEntryPoint.
+    TCommandLineArguments commandLineArguments;
 
 private:
     void operator=(TIntermediate&); // prevent assignments

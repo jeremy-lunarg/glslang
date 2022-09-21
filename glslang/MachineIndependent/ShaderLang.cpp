@@ -1827,6 +1827,7 @@ void TShader::setOverrideVersion(int version)
 }
 
 void TShader::setDebugInfo(bool debugInfo)              { intermediate->setDebugInfo(debugInfo); }
+void TShader::setDebugSource(bool debugSource)          { intermediate->setDebugSource(debugSource); }
 void TShader::setInvertY(bool invert)                   { intermediate->setInvertY(invert); }
 void TShader::setDxPositionW(bool invert)               { intermediate->setDxPositionW(invert); }
 void TShader::setEnhancedMsgs()                         { intermediate->setEnhancedMsgs(); }

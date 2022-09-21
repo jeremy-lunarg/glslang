@@ -1577,8 +1577,8 @@ TGlslangToSpvTraverser::TGlslangToSpvTraverser(unsigned int spvVersion,
             builder.addInclude(iItr->first, iItr->second);
     }
 
-    builder.setEmitNonSemanticShaderDebugInfo(options.emitNonSemanticShaderDebugInfo);
-    builder.setEmitNonSemanticShaderDebugSource(options.emitNonSemanticShaderDebugSource);
+    builder.setEmitNonSemanticShaderDebugInfo(glslangIntermediate->getDebugInfo());
+    builder.setEmitNonSemanticShaderDebugSource(glslangIntermediate->getDebugSource());
 
     stdBuiltins = builder.import("GLSL.std.450");
 
@@ -1602,7 +1602,8 @@ TGlslangToSpvTraverser::TGlslangToSpvTraverser(unsigned int spvVersion,
     }
 
     shaderEntry = builder.makeEntryPoint(glslangIntermediate->getEntryPointName().c_str());
-    entryPoint = builder.addEntryPoint(executionModel, shaderEntry, glslangIntermediate->getEntryPointName().c_str());
+    entryPoint = builder.addEntryPoint(executionModel, shaderEntry, glslangIntermediate->getEntryPointName().c_str(),
+        glslangIntermediate->getCommandLineArguments().c_str());
 
     // Add the source extensions
     const auto& sourceExtensions = glslangIntermediate->getRequestedExtensions();
@@ -4521,7 +4522,7 @@ spv::Id TGlslangToSpvTraverser::convertGlslangStructToSpvType(const glslang::TTy
             // Disadvantages of this approach:
             //  + Not as clean as desired. Traverser queries/sets persistent state. This is fragile.
             //  + Table lookup during creation of composite debug types. This really shouldn't be necessary.
-            if(options.emitNonSemanticShaderDebugInfo) {
+            if(glslangIntermediate->getDebugInfo()) {
                 builder.debugTypeLocs[spvMember].name = glslangMember.type->getFieldName().c_str();
                 builder.debugTypeLocs[spvMember].line = glslangMember.loc.line;
                 builder.debugTypeLocs[spvMember].column = glslangMember.loc.column;

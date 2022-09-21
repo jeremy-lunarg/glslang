@@ -231,6 +231,8 @@ public:
 #ifdef ENABLE_HLSL
         shader.setFlattenUniformArrays(flattenUniformArrays);
 #endif
+        shader.setDebugInfo(enableNonSemanticShaderDebugInfo);
+        shader.setDebugSource(enableNonSemanticShaderDebugInfo);
 
         if (controls & EShMsgSpvRules) {
             if (controls & EShMsgVulkanRules) {
@@ -264,8 +266,6 @@ public:
             std::vector<uint32_t> spirv_binary;
             options().disableOptimizer = !enableOptimizer;
             options().generateDebugInfo = enableDebug;
-            options().emitNonSemanticShaderDebugInfo = enableNonSemanticShaderDebugInfo;
-            options().emitNonSemanticShaderDebugSource = enableNonSemanticShaderDebugInfo;
             glslang::GlslangToSpv(*program.getIntermediate(stage),
                                   spirv_binary, &logger, &options());
 

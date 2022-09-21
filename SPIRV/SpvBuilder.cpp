@@ -68,6 +68,7 @@ Builder::Builder(unsigned int spvVersion, unsigned int magicNumber, SpvBuildLogg
     lastDebugScopeId(NoResult),
     emitOpLines(false),
     emitNonSemanticShaderDebugInfo(false),
+    emitNonSemanticShaderDebugSource(false),
     addressModel(AddressingModelLogical),
     memoryModel(MemoryModelGLSL450),
     builderNumber(magicNumber),
@@ -1767,7 +1768,8 @@ Id Builder::makeCompositeConstant(Id typeId, const std::vector<Id>& members, boo
     return c->getResultId();
 }
 
-Instruction* Builder::addEntryPoint(ExecutionModel model, Function* function, const char* name)
+Instruction* Builder::addEntryPoint(ExecutionModel model, Function* function, char const*const name,
+    char const*const commandLineArguments)
 {
     Instruction* entryPoint = new Instruction(OpEntryPoint);
     entryPoint->addImmediateOperand(model);
@@ -1775,6 +1777,10 @@ Instruction* Builder::addEntryPoint(ExecutionModel model, Function* function, co
     entryPoint->addStringOperand(name);
 
     entryPoints.push_back(std::unique_ptr<Instruction>(entryPoint));
+
+    if (emitNonSemanticShaderDebugInfo) {
+        makeDebugEntryPoint(function->getId(), commandLineArguments);
+    }
 
     return entryPoint;
 }
@@ -2106,6 +2112,20 @@ Id Builder::makeDebugLexicalBlock(uint32_t line) {
     constantsTypesGlobals.push_back(std::unique_ptr<Instruction>(lex));
     module.mapInstruction(lex);
     return lexId;
+}
+
+Id Builder::makeDebugEntryPoint(Id const entryPoint, char const*const commandLineArguments) {
+    assert(debugId[entryPoint] != 0);
+
+    auto inst = new Instruction(getUniqueId(), makeVoidType(), OpExtInst);
+    inst->addIdOperand(nonSemanticShaderDebugInfo);
+    inst->addImmediateOperand(NonSemanticShaderDebugInfo100DebugEntryPoint);
+    inst->addIdOperand(debugId[entryPoint]); // entry point
+    inst->addIdOperand(makeDebugCompilationUnit()); // compilation unit
+    inst->addIdOperand(getStringId(GIT_COMMIT_HASH)); // compiler signature
+    inst->addIdOperand(getStringId(commandLineArguments)); // command-line arguments
+
+    return inst->getResultId();
 }
 
 std::string Builder::unmangleFunctionName(std::string const& name) const
