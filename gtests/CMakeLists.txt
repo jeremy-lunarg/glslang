@@ -98,5 +98,18 @@ if(GLSLANG_TESTS)
 
         add_test(NAME glslang-gtests
                  COMMAND glslangtests --test-root "${GLSLANG_TEST_DIRECTORY}")
+
+	# set_tests_properties(glslang-gtests PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<$<BOOL:${WIN32}>:$<TARGET_FILE_DIR:gmock>>")
+        #
+        # set_tests_properties(glslang-gtests PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<$<BOOL:${WIN32}>:$<TARGET_FILE_DIR:SPVRemapper>>")
+        #
+	# set_tests_properties(glslang-gtests PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<$<BOOL:${WIN32}>:$<TARGET_FILE_DIR:glslang-default-resource-limits>>")
+        #
+        # set_tests_properties(glslang-gtests PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<$<BOOL:${WIN32}>:$<TARGET_FILE_DIR:glslang>>")
+        #
+        # # Prepend paths to DLLs to Windows tests.
+	# set_tests_properties(glslang-gtests PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<$<BOOL:${WIN32}>:$<TARGET_FILE_DIR:gmock>:$<TARGET_FILE_DIR:SPVRemapper>:$<TARGET_FILE_DIR:glslang-default-resource-limits>:$<TARGET_FILE_DIR:glslang>>")
+
+	set_tests_properties(glslang-gtests PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_RUNTIME_DLL_DIRS:glslangtests>")
     endif()
 endif()

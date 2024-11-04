@@ -30,7 +30,7 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-cmake_minimum_required(VERSION 3.17.2)
+cmake_minimum_required(VERSION 3.22)
 project(glslang)
 
 if (CMAKE_VERSION VERSION_LESS "3.21")
@@ -351,6 +351,9 @@ if(GLSLANG_TESTS)
     add_test(NAME glslang-testsuite
 	COMMAND bash ${IGNORE_CR_FLAG} runtests ${RESULTS_PATH} ${VALIDATOR_PATH} ${REMAP_PATH}
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Test/)
+
+    # Prepend paths to DLLs to Windows tests.
+    set_tests_properties(glslang-testsuite PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<$<BOOL:${WIN32}>:$<TARGET_FILE_DIR:glslang-default-resource-limits>>")
 endif(GLSLANG_TESTS)
 
 if (GLSLANG_ENABLE_INSTALL)

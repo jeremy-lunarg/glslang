@@ -232,8 +232,8 @@ jobs:
           cmake -S. -Bbuild -G "Visual Studio 16 2019" -A x64 -DCMAKE_INSTALL_PREFIX="$PWD/build/install" -DBUILD_WERROR=ON -D GLSLANG_TESTS=ON -DBUILD_SHARED_LIBS=ON
           cmake --build build --config ${{matrix.cmake_build_type}} --target install
       # disabled until we figure out DLL issues.
-      # - name: Test
-      #   run: ctest -C ${{matrix.cmake_build_type}} --output-on-failure --test-dir build
+      - name: Test
+        run: ctest -VV -C ${{matrix.cmake_build_type}} --output-on-failure --test-dir build
 
   iOS:
     runs-on: macos-13
