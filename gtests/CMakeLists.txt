@@ -100,8 +100,11 @@ if(GLSLANG_TESTS)
                  COMMAND glslangtests --test-root "${GLSLANG_TEST_DIRECTORY}")
 
         # Prepend paths to DLLs for Windows tests.
-        if(WIN32)
+        # The TARGET_RUNTIME_DLL_DIRS feature requires CMake 3.27 or greater.
+        if (WIN32 AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.27")
             set_tests_properties(glslang-gtests PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<JOIN:$<TARGET_RUNTIME_DLL_DIRS:glslangtests>,\;>")
+        else()
+            message(WARNING "The Windows shared library test configuration requires CMake 3.27 or greater")
         endif()
     endif()
 endif()

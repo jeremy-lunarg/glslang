@@ -30,7 +30,7 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-cmake_minimum_required(VERSION 3.27)
+cmake_minimum_required(VERSION 3.17.2)
 project(glslang)
 
 if (CMAKE_VERSION VERSION_LESS "3.21")
@@ -353,9 +353,12 @@ if(GLSLANG_TESTS)
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Test/)
 
     # Prepend paths to DLLs for Windows tests.
-    if(WIN32)
+    # The TARGET_RUNTIME_DLL_DIRS feature requires CMake 3.27 or greater.
+    if (WIN32 AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.27")
         set_tests_properties(glslang-testsuite PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<JOIN:$<TARGET_RUNTIME_DLL_DIRS:glslang-standalone>,\;>")
         set_tests_properties(glslang-testsuite PROPERTIES ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<JOIN:$<TARGET_RUNTIME_DLL_DIRS:spirv-remap>,\;>")
+    else()
+        message(WARNING "The Windows shared library test configuration requires CMake 3.27 or greater")
     endif()
 
 endif(GLSLANG_TESTS)
