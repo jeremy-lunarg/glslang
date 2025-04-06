@@ -325,6 +325,7 @@ namespace spv {
 
     void spirvbin_t::applyMap()
     {
+        msg(5, 0, std::string("TRACE: ") + std::string(__PRETTY_FUNCTION__));
         msg(3, 2, std::string("Applying map: "));
 
         // Map local IDs through the ID map
@@ -343,6 +344,7 @@ namespace spv {
     // Find free IDs for anything we haven't mapped
     void spirvbin_t::mapRemainder()
     {
+        msg(5, 0, std::string("TRACE: ") + std::string(__PRETTY_FUNCTION__));
         msg(3, 2, std::string("Remapping remainder: "));
 
         spv::Id     unusedId  = 1;  // can't use 0: that's NoResult
@@ -416,6 +418,7 @@ namespace spv {
     // Update local maps of ID, type, etc positions
     void spirvbin_t::buildLocalMaps()
     {
+        msg(5, 0, std::string("TRACE: ") + std::string(__PRETTY_FUNCTION__));
         msg(2, 2, std::string("build local maps: "));
 
         mapped.clear();
@@ -436,6 +439,9 @@ namespace spv {
         // build local Id and name maps
         process(
             [&](spv::Op opCode, unsigned start) {
+                // msg(5, 0, std::string("TRACE: ") + std::string(__PRETTY_FUNCTION__));
+                // msg(5, 0, std::string("JJH: ") + std::string(OpcodeString(opCode)));
+
                 unsigned word = start+1;
                 spv::Id  typeId = spv::NoResult;
 
@@ -498,7 +504,11 @@ namespace spv {
                 return false;
             },
 
-            [this](spv::Id& id) { localId(id, unmapped); }
+            [this](spv::Id& id) {
+                // msg(5, 0, std::string("TRACE: ") + std::string(__PRETTY_FUNCTION__));
+
+                localId(id, unmapped);
+            }
         );
     }
 
@@ -529,6 +539,8 @@ namespace spv {
 
     int spirvbin_t::processInstruction(unsigned word, instfn_t instFn, idfn_t idFn)
     {
+        msg(5, 0, std::string("TRACE: ") + std::string(__PRETTY_FUNCTION__));
+
         const auto     instructionStart = word;
         const unsigned wordCount = asWordCount(instructionStart);
         const int      nextInst  = word++ + wordCount;
@@ -728,6 +740,8 @@ namespace spv {
     // Make a pass over all the instructions and process them given appropriate functions
     spirvbin_t& spirvbin_t::process(instfn_t instFn, idfn_t idFn, unsigned begin, unsigned end)
     {
+        msg(5, 0, std::string("TRACE: ") + std::string(__PRETTY_FUNCTION__));
+
         // For efficiency, reserve name map space.  It can grow if needed.
         nameMap.reserve(32);
 
@@ -812,12 +826,18 @@ namespace spv {
                     std::uint32_t  hashval = fnId * 17; // small prime
 
                     for (unsigned i = entry-1; i >= entry-windowSize; --i) {
+                        // This fixes a corner case where the first entry erreoneously
+                        // steps outside the function body.
+                        if (opCode == spv::OpFunction)
+                            break;
+                        const spv::Op i_op = asOpCode(instPos[i]); // JJH - debug
                         if (asOpCode(instPos[i]) == spv::OpFunction)
                             break;
                         hashval = hashval * 30103 + asOpCodeHash(instPos[i]); // 30103 = semiarbitrary prime
                     }
 
                     for (unsigned i = entry; i <= entry + windowSize; ++i) {
+                        const spv::Op i_op = asOpCode(instPos[i]);  // JJH - debug
                         if (asOpCode(instPos[i]) == spv::OpFunctionEnd)
                             break;
                         hashval = hashval * 30103 + asOpCodeHash(instPos[i]); // 30103 = semiarbitrary prime
@@ -892,8 +912,9 @@ namespace spv {
                         + idCounter
                         + static_cast<unsigned int>(fnId) * 117;
 
-                    if (isOldIdUnmapped(id))
+                    if (isOldIdUnmapped(id)) {
                         localId(id, nextUnusedId(hashval % softTypeIdLimit + firstMappedID));
+                    }
                 }
             });
     }
@@ -1339,6 +1360,8 @@ namespace spv {
     // inevitable): it's up to the caller to handle that gracefully.
     std::uint32_t spirvbin_t::hashType(unsigned typeStart) const
     {
+        msg(5, 0, std::string("TRACE: ") + std::string(__PRETTY_FUNCTION__));
+
         const unsigned wordCount   = asWordCount(typeStart);
         const spv::Op  opCode      = asOpCode(typeStart);
 
@@ -1481,6 +1504,8 @@ namespace spv {
     // Strip a single binary by removing ranges given in stripRange
     void spirvbin_t::remap(std::uint32_t opts)
     {
+        msg(5, 0, std::string("TRACE: ") + std::string(__PRETTY_FUNCTION__));
+
         options = opts;
 
         // Set up opcode tables from SpvDoc
@@ -1542,6 +1567,8 @@ namespace spv {
     void spirvbin_t::remap(std::vector<std::uint32_t>& in_spv, const std::vector<std::string>& whiteListStrings,
                            std::uint32_t opts)
     {
+        msg(5, 0, std::string("TRACE: ") + std::string(__PRETTY_FUNCTION__));
+
         stripWhiteList = whiteListStrings;
         spv.swap(in_spv);
         remap(opts);
@@ -1551,10 +1578,12 @@ namespace spv {
     // remap from a memory image - legacy interface without white list
     void spirvbin_t::remap(std::vector<std::uint32_t>& in_spv, std::uint32_t opts)
     {
-      stripWhiteList.clear();
-      spv.swap(in_spv);
-      remap(opts);
-      spv.swap(in_spv);
+        msg(5, 0, std::string("TRACE: ") + std::string(__PRETTY_FUNCTION__));
+
+        stripWhiteList.clear();
+        spv.swap(in_spv);
+        remap(opts);
+        spv.swap(in_spv);
     }
 
 } // namespace SPV
