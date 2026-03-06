@@ -431,3 +431,11 @@ if (GLSLANG_ENABLE_INSTALL)
             "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
     )
 endif()
+
+# CPack configuration for release archives.
+set(CPACK_PACKAGE_NAME    "glslang")
+set(CPACK_PACKAGE_VERSION "${GLSLANG_VERSION}")
+set(CPACK_PACKAGE_VENDOR  "Khronos Group")
+set(CPACK_STRIP_FILES     TRUE)
+
+include(CPack)
