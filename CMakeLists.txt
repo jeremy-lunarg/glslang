@@ -420,3 +420,5 @@ if (GLSLANG_ENABLE_INSTALL)
             "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
     )
 endif()
+
+include(CPack)
