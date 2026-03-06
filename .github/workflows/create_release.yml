@@ -1,0 +1,54 @@
+name: Create Release
+
+on:
+    workflow_dispatch:
+    release:
+        types: [created]
+
+permissions: read-all
+
+jobs:
+    linux:
+        runs-on: ${{matrix.os.genus}}
+        permissions:
+            contents: write
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [{genus: ubuntu-22.04, family: linux}]
+                compiler: [{cc: clang, cxx: clang++}, {cc: gcc, cxx: g++}]
+                cmake_build_type: [Debug, Release]
+        steps:
+            - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+            - run: ./update_glslang_sources.py
+            - name: Build
+              env:
+                  CC: ${{matrix.compiler.cc}}
+                  CXX: ${{matrix.compiler.cxx}}
+              run: |
+                  mkdir build && cd build
+                  cmake -DCMAKE_BUILD_TYPE=${{matrix.cmake_build_type}} -DCMAKE_INSTALL_PREFIX=`pwd`/install ..
+                  make -j4 install
+            - name: Test
+              run: |
+                  cd build
+                  ctest --output-on-failure
+            - name: Zip
+              if: ${{ matrix.compiler.cc == 'clang' }}
+              env:
+                  ARCHIVE: glslang-main-${{matrix.os.family}}-${{matrix.cmake_build_type}}.zip
+              run: |
+                  cd build/install
+                  zip ${ARCHIVE} \
+                      bin/glslang \
+                      bin/glslangValidator \
+                      include/glslang/* \
+                      include/glslang/**/* \
+                      lib/libGenericCodeGen.a \
+                      lib/libglslang.a \
+                      lib/libglslang-default-resource-limits.a \
+                      lib/libMachineIndependent.a \
+                      lib/libOSDependent.a \
+                      lib/libSPIRV.a \
+                      lib/libSPIRV-Tools.a \
+                      lib/libSPIRV-Tools-opt.a
